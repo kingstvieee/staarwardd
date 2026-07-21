@@ -1,0 +1,15 @@
+{
+  "name": "staarwardd-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "StaarWardd — a human-centred life orchestration prototype",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node --test test/server.test.mjs",
+    "check": "node --check server.mjs && node --check public/app.js"
+  },
+  "engines": { "node": ">=20" }
+}
+

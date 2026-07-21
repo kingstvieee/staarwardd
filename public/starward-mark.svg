@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">StaarWardd seven-point north star</title>
+  <desc id="desc">An original seven-point star held inside seven portal arcs.</desc>
+  <defs><linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffdf2"/><stop offset=".28" stop-color="#e8c66c"/><stop offset=".58" stop-color="#fff"/><stop offset="1" stop-color="#a56c17"/></linearGradient></defs>
+  <g fill="none" stroke="url(#metal)" stroke-linecap="round"><circle cx="80" cy="80" r="70" stroke-width="2" opacity=".35"/><path d="M80 10a70 70 0 0 1 54.7 26.4M150 80a70 70 0 0 1-15.3 43.6M111.2 142.7a70 70 0 0 1-62.4 0M25.3 123.6A70 70 0 0 1 10 80M25.3 36.4A70 70 0 0 1 80 10" stroke-width="5"/></g>
+  <path fill="url(#metal)" d="M80 18l9.7 42.2 34.6-26-21.1 37.7 43.3 1.2-41.3 13 33.1 27.9-39.5-17.8 7.3 42.7L80 104.3 53.9 139l7.3-42.7L21.7 114l33.1-27.9-41.3-13 43.3-1.2-21.1-37.7 34.6 26z"/>
+  <circle cx="80" cy="80" r="8" fill="#07111f" stroke="#fff4c3" stroke-width="2"/>
+</svg>
