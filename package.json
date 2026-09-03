@@ -8,8 +8,11 @@
     "dev": "node server.mjs",
     "start": "node server.mjs",
     "test": "node --test test/server.test.mjs",
-    "check": "node --check server.mjs && node --check public/app.js"
+    "check": "node --check server.mjs && node --check guardian-strands.mjs && node --check public/app.js"
+  },
+  "dependencies": {
+    "@strands-agents/sdk": "^1.0.0",
+    "openai": "^5.0.0"
   },
   "engines": { "node": ">=20" }
 }
-
