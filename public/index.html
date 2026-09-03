@@ -16,10 +16,18 @@
   <main class="experience" id="experience">
     <p class="sr-only">StaarWardd is a cinematic whole-life assistant with seven interactive portals.</p>
     <div class="scene" id="scene">
+      <div class="guardian-gate" aria-hidden="true">
+        <span class="gate-ring gate-ring-one"></span>
+        <span class="gate-ring gate-ring-two"></span>
+        <span class="gate-core"></span>
+        <i class="gate-lightning gate-lightning-a"></i>
+        <i class="gate-lightning gate-lightning-b"></i>
+        <i class="gate-lightning gate-lightning-c"></i>
+      </div>
       <div class="cinematic-stage" aria-hidden="true">
         <img class="stage-base guardian-flight-still" src="/staarwardd-guardian-toronto-v9.png" alt="" decoding="sync" fetchpriority="high">
-        <img class="summoning-sword" src="/staarwardd-summoning-sword-v9.png" alt="" decoding="async">
-        <img class="summoning-bubble" src="/staarwardd-summoning-bubble-v9.png" alt="" decoding="async">
+        <img class="summoning-sword legacy-summon-prop" src="/staarwardd-summoning-sword-v9.png" alt="" decoding="async">
+        <img class="summoning-bubble legacy-summon-prop" src="/staarwardd-summoning-bubble-v9.png" alt="" decoding="async">
       </div>
       <div class="cinematic-brand" aria-hidden="true">
         <p>THE WHOLE-LIFE AI</p>
@@ -76,7 +84,7 @@
   </main>
   <dialog id="approvalDialog"><form method="dialog"><p>HUMAN APPROVAL REQUIRED</p><h2>StaarWardd pauses here.</h2><div id="approvalText"></div><aside><b>No silent actions.</b><span>This prototype simulates approval and never contacts anyone, spends money, books, publishes, or deletes.</span></aside><footer><button value="cancel">Not now</button><button value="approve">Approve simulation</button></footer></form></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="/entry-context.js?v=nfc-foundation-1"></script>
+  <script src="/entry-context.js"></script>
   <script type="module" src="/app.js?v=final-flight-9"></script>
 </body>
 </html>
