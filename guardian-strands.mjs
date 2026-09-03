@@ -1,5 +1,5 @@
 import { Agent } from '@strands-agents/sdk';
-import { OpenAIModel } from '@strands-agents/sdk/openai';
+import { OpenAIModel } from '@strands-agents/sdk/models/openai';
 
 const PORTALS = ['Creativity','Work','Home','Wellbeing','Relationships','Community','Style'];
 
@@ -15,8 +15,11 @@ Keep responses concise, calm, proactive, and practical.`;
 function makeModel() {
   if (!process.env.OPENAI_API_KEY) return null;
   return new OpenAIModel({
+    api: 'chat',
     apiKey: process.env.OPENAI_API_KEY,
-    modelId: process.env.OPENAI_MODEL || 'gpt-5.6'
+    modelId: process.env.OPENAI_MODEL || 'gpt-5.4',
+    maxTokens: 1200,
+    temperature: 0.2
   });
 }
 
@@ -27,6 +30,14 @@ export function getGuardian() {
   if (!model) return null;
   guardian = new Agent({ model, systemPrompt });
   return guardian;
+}
+
+function resultText(result) {
+  const content = result?.message?.content;
+  if (Array.isArray(content)) return content.map(part => part?.text || '').join('').trim();
+  if (typeof result?.message === 'string') return result.message.trim();
+  if (typeof result === 'string') return result.trim();
+  return '';
 }
 
 export async function guardianCoordinate(input, context = {}) {
@@ -41,6 +52,7 @@ export async function guardianCoordinate(input, context = {}) {
   const result = await agent.invoke(prompt);
   return {
     mode: 'strands',
-    text: String(result?.message?.content?.map?.(part => part.text || '').join('') || result?.message || result || '').trim()
+    text: resultText(result),
+    portals: PORTALS
   };
 }
