@@ -3,6 +3,7 @@ import { createReadStream } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { guardianCoordinate } from './guardian-strands.mjs';
 
 const root = fileURLToPath(new URL('./public/', import.meta.url));
 await loadEnv();
@@ -151,7 +152,8 @@ function taskSchema(){
 
 export const server = http.createServer(async (req,res)=>{
   try {
-    if(req.method==='GET' && req.url==='/api/status') { const live=Boolean(process.env.OPENAI_API_KEY) && process.env.STAARWARDD_DEMO_ONLY !== '1' && process.env.STARWARD_DEMO_ONLY !== '1' && process.env.BLESSYNC_DEMO_ONLY !== '1'; return json(res,200,{mode:live?'openai':'demo',model:live?(process.env.OPENAI_MODEL||'gpt-5.6'):null,webSearch:live,voice:'browser',guardian:'cinematic-css'}); }
+    if(req.method==='GET' && req.url==='/api/status') { const live=Boolean(process.env.OPENAI_API_KEY) && process.env.STAARWARDD_DEMO_ONLY !== '1' && process.env.STARWARD_DEMO_ONLY !== '1' && process.env.BLESSYNC_DEMO_ONLY !== '1'; return json(res,200,{mode:live?'openai':'demo',model:live?(process.env.OPENAI_MODEL||'gpt-5.6'):null,webSearch:live,voice:'browser',guardian:'cinematic-css',strands:live?'ready':'needs-key'}); }
+    if(req.method==='POST' && req.url==='/api/guardian') { const body=await bodyJson(req); const input=String(body.input||'').slice(0,4000); const context=body.context && typeof body.context==='object' ? body.context : {}; if(!input.trim()) return json(res,400,{error:'Please enter a Guardian request.'}); try { const result=await guardianCoordinate(input,context); if(!result) return json(res,503,{mode:'strands-unavailable',error:'Guardian requires OPENAI_API_KEY.'}); return json(res,200,result); } catch(e){ return json(res,500,{mode:'strands-error',error:e.message}); } }
     if(req.method==='POST' && req.url==='/api/plan') { const body=await bodyJson(req); const input=String(body.input||'').slice(0,2000); if(!input.trim()) return json(res,400,{error:'Please enter a request.'}); try { const result=await aiPlan(input); return json(res,200,result?{mode:'openai',plan:result.plan,sources:result.sources,webSearched:result.webSearched}:{mode:'demo',plan:demoPlan(input),sources:[],webSearched:false}); } catch(e){ return json(res,200,{mode:'demo-fallback',warning:e.message,plan:demoPlan(input),sources:[],webSearched:false}); } }
     if(req.method!=='GET' && req.method!=='HEAD') return json(res,405,{error:'Method not allowed'});
     const requestPath=req.url.split('?')[0];
@@ -184,5 +186,3 @@ export const server = http.createServer(async (req,res)=>{
 function json(res,status,data){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));}
 function bodyJson(req){return new Promise((resolve,reject)=>{let body='';req.on('data',c=>{body+=c;if(body.length>1e6)reject(new Error('Body too large'));});req.on('end',()=>{try{resolve(JSON.parse(body||'{}'))}catch{reject(new Error('Invalid JSON'))}});req.on('error',reject);});}
 if(process.argv[1]===fileURLToPath(import.meta.url)) server.listen(port,'0.0.0.0',()=>console.log(`StaarWardd is ready at http://localhost:${port}`));
-
-
