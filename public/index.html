@@ -54,8 +54,31 @@
     <section class="portal-workspace" id="portalWorkspace" aria-hidden="true" aria-labelledby="workspaceTitle">
       <header><div><p id="workspaceEyebrow">PORTAL</p><h2 id="workspaceTitle">Your world</h2><span id="workspacePromise"></span></div><button id="workspaceClose" aria-label="Close portal">×</button></header>
       <div class="workspace-body">
+        <section class="portal-world" id="portalWorld" aria-labelledby="worldTitle">
+          <div class="world-environment" id="worldEnvironment" aria-hidden="true"></div>
+          <div class="world-copy">
+            <p id="worldKicker">LIVE ENVIRONMENT</p>
+            <h3 id="worldTitle">Your world is ready</h3>
+            <span id="worldDescription"></span>
+          </div>
+          <div class="world-status" id="worldStatus" aria-label="Current portal state"></div>
+          <div class="shared-state" id="sharedState" aria-live="polite" hidden></div>
+          <div class="world-zones" id="worldZones" aria-label="Interactive areas"></div>
+          <button class="world-feature" id="worldFeature" type="button" hidden></button>
+          <aside class="guardian-presence" aria-label="Guardian orchestration">
+            <span class="guardian-core" aria-hidden="true">✦</span>
+            <div><p>GUARDIAN IS PRESENT</p><b id="guardianState">Watching context—with your permission</b></div>
+          </aside>
+        </section>
+        <section class="orchestration-strip" aria-label="How Guardian coordinates your life">
+          <div><span>1</span><b>Detects context</b></div><i>→</i>
+          <div><span>2</span><b>Activates relevant agents</b></div><i>→</i>
+          <div><span>3</span><b>Portals exchange signals</b></div><i>→</i>
+          <div><span>4</span><b>Prepares or acts by permission</b></div>
+        </section>
+        <button class="scenario-demo" id="scenarioDemoButton" type="button"><span>LIVE GUARDIAN SCENARIO</span><b>Run the founder evening conflict</b><i>Work · Style · Relationships · Home →</i></button>
         <form class="command-form" id="commandForm">
-          <label for="command">What should StaarWardd handle?</label>
+          <label for="command">Speak to Guardian inside this world</label>
           <div class="command-row"><textarea id="command" rows="2" required placeholder="Speak naturally. Include everything on your mind…"></textarea><button type="submit">Sync <b>→</b></button></div>
           <div class="voice-status" id="voiceStatus" role="status" aria-live="polite"><span aria-hidden="true">◉</span> Press Talk, then speak naturally. Edge or Chrome recommended.</div>
           <div class="quick-prompts" id="quickPrompts"></div>
@@ -63,6 +86,11 @@
         </form>
         <div class="plan" id="results" hidden aria-live="polite">
           <div class="plan-summary"><p>YOUR StaarWardd</p><h3 id="resultSummary"></h3><div id="activeDomains"></div></div>
+          <section class="coordination-trace" id="coordinationTrace" aria-label="Guardian coordination trace">
+            <header><p>GUARDIAN COORDINATION</p><span id="coordinationDecision"></span></header>
+            <div class="coordination-agents" id="coordinationAgents"></div>
+            <ol id="coordinationExchanges"></ol>
+          </section>
           <aside class="source-list" id="sourceList" hidden aria-label="Sources"><p>LIVE SOURCES</p><div id="sourceLinks"></div></aside>
           <div class="horizons">
             <article><header><b>NOW</b><span>Make momentum</span></header><div id="nowTasks"></div></article>

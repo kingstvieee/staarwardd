@@ -1,13 +1,13 @@
 const $ = function (selector) { return document.querySelector(selector); };
 
 const portals = [
-  {name:"Creativity",icon:"✦",promise:"Inspire · Imagine · Create",prompts:["Give me a 45-minute creative ritual","Turn my scattered ideas into one project","Balance creative work with rest"],tools:["Idea distiller","Creative ritual","Finish-line builder"]},
-  {name:"Work",icon:"▥",promise:"Focus · Grow · Achieve",prompts:["Build a realistic focus day","Prepare my next client deliverable","Protect deep work and reduce overload"],tools:["Priority triage","Deep-work shield","Deliverable builder"]},
-  {name:"Home",icon:"⌂",promise:"Comfort · Harmony · Sanctuary",prompts:["Create a gentle home reset","Plan groceries, dinner, and cleanup","Organize this week without overwhelm"],tools:["Room reset","Meal rhythm","Household sequence"]},
-  {name:"Wellbeing",icon:"◉",promise:"Heal · Balance · Thrive",prompts:["Help me restore my energy today","Plan movement, hydration, and sleep","Make a low-stress wellbeing rhythm"],tools:["Energy check","Recovery rhythm","Movement plan"]},
-  {name:"Relationships",icon:"∞",promise:"Connect · Love · Support",prompts:["Help me reconnect with someone in my own voice","Help me prepare a kind boundary conversation","Plan meaningful family time without overcommitting"],tools:["Connection compass","Boundary rehearsal","Message studio"]},
-  {name:"Community",icon:"◇",promise:"Belong · Uplift · Grow Together",prompts:["Map one Toronto community contribution that fits my energy","Compare a local event, organization, and neighbour-scale action","Help me contribute without burning out"],tools:["Local impact map","Energy budget","Outreach planner"]},
-  {name:"Style",icon:"△",promise:"Express · Elevate · Empower",prompts:["Build an outfit formula from what I already own","Prepare a complete weather-aware look for tomorrow","Create a keep, tailor, repair, restyle, release wardrobe edit"],tools:["Outfit studio","Wardrobe edit","Event-ready plan"]}
+  {name:"Creativity",icon:"✦",promise:"The futuristic creation studio",kicker:"DIGGITSTAAR CREATION STUDIO",description:"A serious production environment where ideas move through media, design, AI creation, review and publishing.",status:[["Studio","Active"],["Projects","3 in motion"],["Publish gate","Approval on"]],zones:[["Creation table","Shape the concept"],["Media wall","Edit image, sound and video"],["AI lab","Generate and refine"],["Publishing bay","Review before release"]],feature:"Enter DIGGITSTAAR workflows",prompts:["Turn my concept into a production workflow","Prepare this media project for review","Coordinate design, content and publishing"],tools:["Production pipeline","Media direction","Approval-ready publish"]},
+  {name:"Work",icon:"▥",promise:"The Guardian command centre",kicker:"GUARDIAN COMMAND CENTRE",description:"Schedule, projects, meetings and communications converge here so conflicts can be resolved across every relevant portal.",status:[["Today","4 commitments"],["Conflict scan","1 detected"],["Focus window","Protected"]],zones:[["Schedule wall","See time and conflicts"],["Project table","Move priority work"],["Communications","Prepare responses"],["Cross-portal map","Coordinate the whole day"]],feature:"Open command briefing",prompts:["Brief me on today and resolve conflicts","Coordinate my projects, meetings and messages","Protect focus across every portal"],tools:["Conflict command","Project control","Communications desk"]},
+  {name:"Home",icon:"⌂",promise:"The intelligent living environment",kicker:"LIVE SMART-HOME ENVIRONMENT",description:"Your rooms, devices, routines, security and household state respond as one—with arrival and departure intelligence.",status:[["Home state","Secure"],["Devices","12 connected"],["Arrival","Ready for you"]],zones:[["Living environment","See the household state"],["Routines","Morning, away and night"],["Security","Doors, sensors and alerts"],["Household","Supplies, care and maintenance"]],feature:"Enter STAAR Access",prompts:["Prepare the home for my arrival","Run an evening household and security check","Coordinate devices, routines and supplies"],tools:["Arrival intelligence","Guardian automation","Household state"]},
+  {name:"Wellbeing",icon:"◉",promise:"A calmer space for sustainable rhythms",kicker:"CALM CONTEXT ENVIRONMENT",description:"Check-ins, routines and permitted wellbeing context help Guardian coordinate support without diagnosing or replacing professional care.",status:[["Energy check-in","Not shared"],["Routine","Evening reset"],["Privacy","Permission scoped"]],zones:[["Quiet centre","Pause and check in"],["Routine path","Food, movement and rest"],["Context vault","Control what is shared"],["Support bridge","Prepare useful next steps"]],feature:"Review wellbeing permissions",prompts:["Build a calm routine around my day","Help me check in without diagnosing me","Coordinate permitted wellbeing context with my schedule"],tools:["Gentle check-in","Routine composer","Permission controls"]},
+  {name:"Relationships",icon:"∞",promise:"A living space for the people who matter",kicker:"LIVING RELATIONSHIP SPACE",description:"People, commitments, shared memories, plans and communication stay connected without reducing real relationships to generic prompts.",status:[["People","6 close connections"],["Commitments","2 upcoming"],["Messages","1 to prepare"]],zones:[["People constellation","Open a real relationship"],["Memory gallery","Recall shared context"],["Commitment table","Protect promises and plans"],["Communication room","Prepare a human message"]],feature:"Open people constellation",prompts:["Show the people and commitments needing attention","Prepare a message using our real context","Plan meaningful time without losing existing promises"],tools:["People context","Commitment keeper","Communication room"]},
+  {name:"Community",icon:"◇",promise:"The real-world connection layer",kicker:"TORONTO CONNECTION LAYER",description:"Discover accessible events, places and opportunities nearby, then expand into trusted global community experiences.",status:[["Location","Toronto"],["Nearby","8 possibilities"],["Access filters","On"]],zones:[["Toronto map","Explore places nearby"],["Opportunity beacon","Find ways to participate"],["Accessibility layer","Filter for real access"],["Global window","Connect beyond the city"]],feature:"Explore nearby connections",prompts:["Find accessible Toronto events that fit my energy","Compare nearby places and opportunities","Connect a local plan to my wider community goals"],tools:["Local discovery","Access-aware map","Opportunity matcher"]},
+  {name:"Style",icon:"△",promise:"Walk into your future wardrobe",kicker:"FUTURISTIC WARDROBE · RISING STAARDFORM",description:"A physical-feeling dressing room of illuminated racks, mirrors, outfits and a responsive Guardian Stylist—not a storefront pasted onto a page.",status:[["Wardrobe","Synced"],["Fitting mirror","Ready"],["Stylist","Present"]],zones:[["Illuminated racks","Browse complete looks"],["Fitting mirror","See silhouette and fit"],["Outfit plinth","Build the full look"],["Stylist station","Refine with Guardian"]],feature:"Enter RISING STAARDFORM atelier",prompts:["Walk me through a complete outfit fitting","Style a look from my real wardrobe","Build a RISING STAARDFORM look for my event"],tools:["Fitting mirror","Wardrobe intelligence","Guardian Stylist"]}
 ];
 
 const PORTAL_START = 6.25;
@@ -33,6 +33,17 @@ let pending = null;
 let sequenceTimers = [];
 let sequenceId = 0;
 let log = JSON.parse(localStorage.getItem("staarwardd-log") || localStorage.getItem("starward-log") || localStorage.getItem("blessync-log") || "[]");
+let hubState = readHubState();
+
+function readHubState() {
+  try { return JSON.parse(localStorage.getItem("staarwardd-hub-state") || "{}"); }
+  catch (error) { return {}; }
+}
+
+function saveHubState(patch) {
+  hubState = Object.assign({}, hubState, patch);
+  localStorage.setItem("staarwardd-hub-state", JSON.stringify(hubState));
+}
 
 portals.forEach(function (portal, index) {
   const button = document.createElement("button");
@@ -160,6 +171,7 @@ function openPortal(portal, index) {
   $("#workspaceEyebrow").textContent = portal.icon + " " + portal.name.toUpperCase() + " PORTAL";
   $("#workspaceTitle").textContent = portal.name;
   $("#workspacePromise").textContent = portal.promise;
+  renderPortalWorld(portal);
   $("#quickPrompts").innerHTML = "";
   $("#portalCapabilities").innerHTML = "<p>SPECIALIST TOOLS</p>" + portal.tools.map(function (tool, toolIndex) {
     return '<button type="button" data-tool="' + toolIndex + '">' + esc(tool) + '</button>';
@@ -187,6 +199,79 @@ function openPortal(portal, index) {
   addLog(portal.name + " portal opened", "Portal");
   setTimeout(function () { $("#command").focus(); }, 500);
 }
+
+function renderPortalWorld(portal) {
+  const world = $("#portalWorld");
+  world.dataset.portal = portal.name.toLowerCase();
+  $("#worldKicker").textContent = portal.kicker;
+  $("#worldTitle").textContent = portal.name === "Style" ? "Step inside your wardrobe" : portal.promise;
+  $("#worldDescription").textContent = portal.description;
+  $("#worldStatus").innerHTML = portal.status.map(function (item) {
+    return '<div><span>' + esc(item[0]) + '</span><b>' + esc(item[1]) + '</b></div>';
+  }).join("");
+  $("#worldZones").innerHTML = portal.zones.map(function (zone, index) {
+    return '<button type="button" data-zone="' + index + '"><span>0' + (index + 1) + '</span><b>' + esc(zone[0]) + '</b><small>' + esc(zone[1]) + '</small></button>';
+  }).join("");
+  $("#worldZones").querySelectorAll("[data-zone]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      const zone = portal.zones[Number(button.dataset.zone)];
+      $("#command").value = zone[1] + " in my " + portal.name + " portal";
+      $("#command").focus();
+      addLog(zone[0] + " activated", portal.name + " agent");
+    });
+  });
+  const feature = $("#worldFeature");
+  feature.hidden = false;
+  feature.textContent = portal.feature + " →";
+  feature.onclick = function () {
+    $("#command").value = portal.prompts[0];
+    $("#command").focus();
+    addLog(portal.feature + " prepared", portal.name + " agent");
+  };
+  $("#guardianState").textContent = portal.name === "Wellbeing"
+    ? "Coordinating permitted context—never diagnosing"
+    : "Watching relevant signals—acting only by permission";
+  renderSharedState(portal.name);
+}
+
+function renderSharedState(domain) {
+  const shared = $("#sharedState");
+  const state = hubState[domain.toLowerCase()];
+  if (!state) {
+    shared.hidden = true;
+    shared.innerHTML = "";
+    return;
+  }
+  shared.hidden = false;
+  shared.innerHTML = '<p>SHARED LIVE STATE</p>' + Object.entries(state).map(function (entry) {
+    return '<div><span>' + esc(entry[0].replace(/([A-Z])/g, " $1")) + '</span><b>' + esc(entry[1]) + '</b></div>';
+  }).join("");
+}
+
+$("#scenarioDemoButton").addEventListener("click", async function () {
+  const button = this;
+  button.disabled = true;
+  button.classList.add("running");
+  button.querySelector("b").textContent = "Guardian is detecting conflicts…";
+  setVoiceStatus("Guardian is coordinating Work, Style, Relationships, and Home…", "thinking");
+  try {
+    const response = await fetch("/api/scenario", {method:"POST"});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Scenario could not start");
+    saveHubState(data.statePatch || {});
+    renderSharedState(activePortal.name);
+    renderPlan(data.plan, []);
+    speakPlan(data.plan, data.mode, 0);
+    addLog("Founder evening conflict coordinated across " + data.plan.domains.join(", "), "Guardian scenario");
+    button.querySelector("b").textContent = "Scenario coordinated — review approvals below";
+  } catch (error) {
+    toast(error.message);
+    button.querySelector("b").textContent = "Run the founder evening conflict";
+  } finally {
+    button.disabled = false;
+    button.classList.remove("running");
+  }
+});
 
 $("#workspaceClose").addEventListener("click", function () {
   $("#portalWorkspace").classList.remove("open");
@@ -224,12 +309,32 @@ $("#commandForm").addEventListener("submit", async function (event) {
 function renderPlan(plan, sources) {
   $("#resultSummary").textContent = plan.summary;
   $("#activeDomains").innerHTML = plan.domains.map(function (domain) { return "<span>" + esc(domain) + "</span>"; }).join("");
+  renderCoordination(plan.coordination, plan.domains);
   renderTasks("#nowTasks", plan.now);
   renderTasks("#todayTasks", plan.today);
   renderTasks("#weekTasks", plan.week);
   renderSources(sources || []);
   $("#results").hidden = false;
   $("#results").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function renderCoordination(coordination, domains) {
+  const trace = coordination || {
+    detected:"Context detected from the current request.",
+    agents:domains,
+    exchanges:[],
+    decision:"Advice prepared; permission is required before external action."
+  };
+  portalElements.forEach(function (element) {
+    element.classList.toggle("coordinated", trace.agents.includes(element.dataset.domain));
+  });
+  $("#coordinationDecision").textContent = trace.decision;
+  $("#coordinationAgents").innerHTML = '<div class="detected-signal"><span>DETECTED</span><b>' + esc(trace.detected) + '</b></div>' + trace.agents.map(function (agent) {
+    return '<div class="agent-chip"><span>ACTIVE</span><b>' + esc(agent) + ' agent</b></div>';
+  }).join("");
+  $("#coordinationExchanges").innerHTML = trace.exchanges.length ? trace.exchanges.map(function (exchange) {
+    return '<li><b>' + esc(exchange.from) + '</b><span>→ ' + esc(exchange.signal) + ' →</span><b>' + esc(exchange.to) + '</b></li>';
+  }).join("") : '<li class="no-exchange"><b>' + esc(trace.agents[0] || "Guardian") + '</b><span>No unrelated portal was activated.</span></li>';
 }
 
 function renderSources(sources) {
@@ -443,7 +548,7 @@ function speakPlan(plan, mode, sourceCount) {
   const firstNow = plan.now && plan.now[0] ? "First: " + plan.now[0].title + ". " + plan.now[0].detail : "";
   const safety = plan.sensitive ? " I found a sensitive action and paused it for your approval." : "";
   const evidence = sourceCount ? " I checked live sources; the links are shown with your plan." : "";
-  const introduction = mode === "openai" ? "Your GPT-5.6 plan is ready. " : "Your deterministic demo plan is ready. ";
+  const introduction = mode === "openai" ? "Your GPT-5.6 plan is ready. " : mode === "scenario" ? "Guardian coordination complete. " : "Your deterministic demo plan is ready. ";
   const utterance = new SpeechSynthesisUtterance(introduction + plan.summary + ". " + firstNow + safety + evidence);
   utterance.lang = "en-CA";
   utterance.rate = 0.95;
