@@ -1,19 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "builds": [
-    {
-      "src": "server.mjs",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["public/**"]
-      }
+  "functions": {
+    "api/index.mjs": {
+      "includeFiles": "public/**"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/server.mjs"
+      "source": "/(.*)",
+      "destination": "/api/index"
     }
   ]
 }

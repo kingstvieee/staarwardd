@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 process.env.STAARWARDD_DEMO_ONLY = '1';
 const { demoPlan, scenarioPlan, server } = await import('../server.mjs');
+const { default: vercelHandler } = await import('../api/index.mjs');
+
+test('Vercel entry point exports the existing server handler', () => {
+  assert.equal(typeof vercelHandler, 'function');
+});
 
 test('demo engine is deterministic', () => {
   const a = demoPlan('Plan work, groceries, and a walk');
