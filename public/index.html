@@ -49,6 +49,7 @@
       <button id="soundToggle" aria-pressed="true" title="Toggle sound">Sound <b>On</b></button>
       <button id="motionToggle" aria-pressed="true" title="Toggle visual effects">FX <b>On</b></button>
       <button id="talkButton" class="talk-button" aria-pressed="false" title="Speak to StaarWardd"><span aria-hidden="true">●</span> Talk</button>
+      <button id="fullDemoButton" class="full-demo-control" title="Run the complete seven-portal experience">Full run <b>▶</b></button>
       <button id="replayButton" hidden>Replay ✦</button>
       <button id="logToggle" aria-expanded="false">Log <b id="logCount">0</b></button>
     </nav>
@@ -77,7 +78,31 @@
           <div><span>3</span><b>Portals exchange signals</b></div><i>→</i>
           <div><span>4</span><b>Prepares or acts by permission</b></div>
         </section>
-        <button class="scenario-demo" id="scenarioDemoButton" type="button"><span>LIVE GUARDIAN SCENARIO</span><b>Run the founder evening conflict</b><i>Work - Style - Relationships - Home →</i></button>
+        <button class="scenario-demo" id="scenarioDemoButton" type="button"><span>FULL LIVE GUARDIAN RUN</span><b>Experience all seven portals working together</b><i>Narrated · paced · permission-controlled →</i></button>
+        <section class="walkthrough-stage" id="walkthroughStage" hidden aria-live="polite" aria-label="Full Guardian walkthrough">
+          <header class="walkthrough-header">
+            <div><p>GUARDIAN LIVE RUN</p><h3 id="walkthroughTitle">One signal. Seven relevant worlds.</h3></div>
+            <div class="walkthrough-progress"><span id="walkthroughCount">1 / 7</span><i><b id="walkthroughProgressBar"></b></i></div>
+          </header>
+          <ol class="walkthrough-portals" id="walkthroughPortals" aria-label="Walkthrough portals"></ol>
+          <article class="walkthrough-scene" id="walkthroughScene">
+            <div class="walkthrough-phase"><span id="walkthroughPhase">DETECT</span><b id="walkthroughDomain">WORK AGENT</b></div>
+            <h3 id="walkthroughStepTitle">The launch day collision appears</h3>
+            <p class="walkthrough-narration" id="walkthroughNarration"></p>
+            <div class="walkthrough-evidence">
+              <div><span>SIGNAL</span><b id="walkthroughSignal"></b></div>
+              <div><span>PORTAL RECEIVES</span><b id="walkthroughReceived"></b></div>
+              <div><span>GUARDIAN</span><b id="walkthroughGuardian"></b></div>
+              <div class="permission"><span>PERMISSION STATE</span><b id="walkthroughPermission"></b></div>
+            </div>
+          </article>
+          <footer class="walkthrough-controls">
+            <button id="walkthroughBack" type="button">← Back</button>
+            <button id="walkthroughPause" type="button" aria-pressed="false">Pause</button>
+            <button id="walkthroughNext" type="button">Next portal →</button>
+            <button id="walkthroughRestart" type="button">Restart</button>
+          </footer>
+        </section>
         <form class="command-form" id="commandForm">
           <label for="command">Speak to Guardian inside this world</label>
           <div class="command-row"><textarea id="command" rows="2" required placeholder="Speak naturally. Include everything on your mind..."></textarea><button type="submit">Sync <b>→</b></button></div>
@@ -105,6 +130,6 @@
   </main>
   <dialog id="approvalDialog"><form method="dialog"><p>HUMAN APPROVAL REQUIRED</p><h2>StaarWardd pauses here.</h2><div id="approvalText"></div><aside><b>No silent actions.</b><span>This prototype simulates approval and never contacts anyone, spends money, books, publishes, or deletes.</span></aside><footer><button value="cancel">Not now</button><button value="approve">Approve simulation</button></footer></form></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="/app.js?v=final-flight-9"></script>
+  <script type="module" src="/app.js?v=full-live-run-10"></script>
 </body>
 </html>

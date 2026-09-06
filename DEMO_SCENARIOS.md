@@ -1,16 +1,18 @@
 # Devpost-ready demo scenarios
 
-## 1. Guardian founder evening (hero flow)
+## 1. Full seven-portal Guardian run (hero flow)
 
-Open any portal and select **Run the founder evening conflict**.
+Select **Full run** from the cinematic screen, or open any portal and select **Experience all seven portals working together**.
 
-Guardian detects that an investor meeting may run 45 minutes late and collide with a RISING STAARDFORM fitting, an anniversary dinner, gift delivery, and the home arrival routine. Show:
+Guardian narrates the Toronto awakening, detects that an investor meeting may run 45 minutes late, and traces the effect through a DIGGITSTAAR release, accessible Toronto showcase, RISING STAARDFORM fitting, anniversary dinner, permitted wellbeing reset, gift delivery, and STAAR Access arrival routine. Show:
 
-1. Work, Style, Relationships, and Home agents activating—no unrelated portal appears.
-2. The visible signal path from meeting timing to fitting, dinner travel buffer, delivery watch, and home arrival.
-3. Shared state persisting when moving between the four portals.
-4. Prepared stylist, dinner, and home adjustments pausing for approval.
-5. The action log confirming that nothing external was silently executed.
+1. Work detecting the conflict and activating the six other agents because each has relevant context.
+2. The paced, narrated progression through all seven immersive portal environments.
+3. Each portal visibly showing what signal it received, what Guardian prepared, and the current permission state.
+4. Pause, Continue, Back, Next portal, direct portal-step, and Restart controls.
+5. Shared state persisting while Guardian moves between worlds.
+6. Publishing, messaging, booking, and home-device changes pausing for approval.
+7. The final coordinated plan and action log confirming that nothing external was silently executed.
 
 ## 2. The cross-domain morning
 
@@ -40,8 +42,8 @@ Show Creativity and Wellbeing activation plus the balanced near-term and weekly 
 
 Open Relationships to show the connection compass, boundary rehearsal, and message studio. Open Community for the local impact map, energy budget, and outreach planner. Open Style for outfit, wardrobe, and event-ready tools. Then use one command mentioning family, a neighbourhood event, and an outfit to demonstrate cross-domain coordination across the three completed specialists.
 
-## Suggested 90-second narration
+## Guardian narration
 
-“Most AI tools optimize one slice of life. StaarWardd coordinates the whole person. Guardian just detected one meeting delay and activated only the four agents affected. Work shared timing with Style. Style protected the dinner travel buffer. Relationships connected the gift and commitment to Home’s arrival routine. The adjustments are prepared, but Guardian has not contacted anyone or changed a device. Those actions pause for my approval, and the complete coordination path remains visible.”
+The full run now narrates itself from the cinematic awakening through the final approval briefing. Sound can be turned off, and every stage remains readable on screen.
 
 

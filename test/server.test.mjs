@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 process.env.STAARWARDD_DEMO_ONLY = '1';
 const serverModule = await import('../server.mjs');
-const { demoPlan, scenarioPlan, server } = serverModule;
+const { demoPlan, scenarioPlan, fullWalkthroughPlan, server } = serverModule;
 const { default: vercelHandler } = await import('../api/index.mjs');
 
 test('Vercel entry point exports the existing server handler', () => {
@@ -53,6 +53,8 @@ test('server serves app, query URLs, media, and API', async t => {
   assert.match(homeText, /Portals exchange signals/);
   assert.match(homeText, /Prepares or acts by permission/);
   assert.match(homeText, /id="coordinationTrace"/);
+  assert.match(homeText, /id="fullDemoButton"/);
+  assert.match(homeText, /id="walkthroughStage"/);
   assert.match(homeText, /staarwardd-guardian-toronto-v9\.png/);
   assert.match(homeText, /staarwardd-summoning-bubble-v9\.png/);
   assert.match(homeText, /staarwardd-summoning-sword-v9\.png/);
@@ -94,6 +96,13 @@ test('server serves app, query URLs, media, and API', async t => {
   assert.equal(scenarioData.mode, 'scenario');
   assert.deepEqual(scenarioData.plan.domains, ['Work', 'Style', 'Relationships', 'Home']);
   assert.equal(scenarioData.statePatch.relationships.commitment, 'Anniversary dinner');
+
+  const walkthrough = await fetch(base + '/api/walkthrough', { method:'POST' });
+  assert.equal(walkthrough.status, 200);
+  const walkthroughData = await walkthrough.json();
+  assert.equal(walkthroughData.mode, 'walkthrough');
+  assert.equal(walkthroughData.walkthrough.steps.length, 7);
+  assert.deepEqual(walkthroughData.walkthrough.domains, ['Work', 'Creativity', 'Community', 'Style', 'Relationships', 'Wellbeing', 'Home']);
 });
 
 test('single-domain requests do not activate unrelated portal agents', () => {
@@ -113,6 +122,26 @@ test('founder scenario coordinates four portals without executing actions', () =
   assert.match(result.plan.coordination.decision, /approval/i);
   assert.equal(result.statePatch.scenario, 'founder-evening');
   assert.equal(result.statePatch.home.arrivalRoutine, 'prepared-delay');
+});
+
+test('full live walkthrough makes all seven portals relevant and preserves permission boundaries', () => {
+  const result = fullWalkthroughPlan();
+  const { walkthrough, plan, statePatch } = result;
+  assert.deepEqual(walkthrough.domains, ['Work', 'Creativity', 'Community', 'Style', 'Relationships', 'Wellbeing', 'Home']);
+  assert.equal(walkthrough.steps.length, 7);
+  assert.deepEqual(walkthrough.steps.map(step => step.domain), walkthrough.domains);
+  assert.equal(new Set(walkthrough.steps.map(step => step.domain)).size, 7);
+  assert.ok(walkthrough.steps.every(step => step.narration && step.guardian && step.permission));
+  assert.match(walkthrough.steps.find(step => step.domain === 'Creativity').narration, /DIGGITSTAAR/i);
+  assert.match(walkthrough.steps.find(step => step.domain === 'Style').narration, /RISING STAARDFORM/i);
+  assert.match(walkthrough.steps.find(step => step.domain === 'Home').narration, /STAAR Access/i);
+  assert.match(walkthrough.steps.find(step => step.domain === 'Wellbeing').guardian, /not diagnos/i);
+  assert.ok(walkthrough.steps.some(step => /approval/i.test(step.permission)));
+  assert.deepEqual(plan.domains, walkthrough.domains);
+  assert.equal(plan.sensitive, true);
+  assert.match(plan.coordination.decision, /approval/i);
+  assert.equal(statePatch.scenario, 'full-live-run');
+  assert.notEqual(statePatch.home.arrivalRoutine, 'executed');
 });
 test('three specialist portals return distinct functional playbooks', () => {
   const relationships = demoPlan('Relationships context: draft and send a kind message to my sister');

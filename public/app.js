@@ -34,6 +34,12 @@ let sequenceTimers = [];
 let sequenceId = 0;
 let log = JSON.parse(localStorage.getItem("staarwardd-log") || localStorage.getItem("starward-log") || localStorage.getItem("blessync-log") || "[]");
 let hubState = readHubState();
+let walkthroughData = null;
+let walkthroughIndex = -1;
+let walkthroughPaused = false;
+let walkthroughTimer = null;
+let walkthroughRunId = 0;
+let pendingWalkthroughLaunch = false;
 
 function readHubState() {
   try { return JSON.parse(localStorage.getItem("staarwardd-hub-state") || "{}"); }
@@ -147,6 +153,10 @@ function completeAwakening(run) {
     const portalIndex = portals.findIndex(function (portal) { return portal.name.toLowerCase() === requestedPortal.toLowerCase(); });
     if (portalIndex >= 0) schedule(function () { openPortal(portals[portalIndex], portalIndex); }, 450);
   }
+  if (pendingWalkthroughLaunch) {
+    pendingWalkthroughLaunch = false;
+    schedule(startFullWalkthrough, 650);
+  }
 }
 
 function replay() {
@@ -163,7 +173,7 @@ if (launchParams.get("autoplay") === "1") {
   schedule(awaken, 180);
 }
 
-function openPortal(portal, index) {
+function openPortal(portal, index, options) {
   if (!experience.classList.contains("ready")) return;
   activePortal = portal;
   score.portalOpen(index);
@@ -197,7 +207,7 @@ function openPortal(portal, index) {
   $("#portalWorkspace").setAttribute("aria-hidden", "false");
   $("#results").hidden = true;
   addLog(portal.name + " portal opened", "Portal");
-  setTimeout(function () { $("#command").focus(); }, 500);
+  if (!options || !options.walkthrough) setTimeout(function () { $("#command").focus(); }, 500);
 }
 
 function renderPortalWorld(portal) {
@@ -248,32 +258,227 @@ function renderSharedState(domain) {
   }).join("");
 }
 
-$("#scenarioDemoButton").addEventListener("click", async function () {
-  const button = this;
-  button.disabled = true;
-  button.classList.add("running");
-  button.querySelector("b").textContent = "Guardian is detecting conflicts…";
-  setVoiceStatus("Guardian is coordinating Work, Style, Relationships, and Home…", "thinking");
+function clearWalkthroughClock() {
+  if (walkthroughTimer) clearTimeout(walkthroughTimer);
+  walkthroughTimer = null;
+}
+
+function stopWalkthroughVoice() {
+  walkthroughRunId += 1;
+  clearWalkthroughClock();
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+}
+
+function renderWalkthroughPortals() {
+  const list = $("#walkthroughPortals");
+  list.innerHTML = walkthroughData.walkthrough.steps.map(function (step, index) {
+    return '<li><button type="button" data-walkthrough-step="' + index + '"><span>0' + (index + 1) + '</span><b>' + esc(step.domain) + '</b></button></li>';
+  }).join("");
+  list.querySelectorAll("[data-walkthrough-step]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      walkthroughPaused = true;
+      $("#walkthroughPause").textContent = "Continue";
+      $("#walkthroughPause").setAttribute("aria-pressed", "true");
+      showWalkthroughStep(Number(button.dataset.walkthroughStep), false);
+    });
+  });
+}
+
+function updateWalkthroughTimeline(index, complete) {
+  $("#walkthroughPortals").querySelectorAll("button").forEach(function (button, buttonIndex) {
+    button.classList.toggle("current", !complete && buttonIndex === index);
+    button.classList.toggle("complete", complete || buttonIndex < index);
+    if (!complete && buttonIndex === index) button.setAttribute("aria-current", "step");
+    else button.removeAttribute("aria-current");
+  });
+}
+
+function queueWalkthroughAdvance(token, delay) {
+  clearWalkthroughClock();
+  walkthroughTimer = setTimeout(function () {
+    if (token !== walkthroughRunId || walkthroughPaused) return;
+    showWalkthroughStep(walkthroughIndex + 1, true);
+  }, delay);
+}
+
+function narrateWalkthroughStep(step, token) {
+  if (!soundOn || !("speechSynthesis" in window)) {
+    queueWalkthroughAdvance(token, 11000);
+    return;
+  }
+  const utterance = new SpeechSynthesisUtterance(step.narration + " " + step.guardian + " " + step.permission);
+  utterance.lang = "en-CA";
+  utterance.rate = 0.88;
+  utterance.pitch = 0.86;
+  const voices = window.speechSynthesis.getVoices();
+  utterance.voice = voices.find(function (voice) { return /en-CA/i.test(voice.lang); })
+    || voices.find(function (voice) { return /^en/i.test(voice.lang); })
+    || null;
+  utterance.onstart = function () {
+    if (token === walkthroughRunId) setVoiceStatus("Guardian is narrating " + step.domain + "…", "speaking");
+  };
+  utterance.onend = function () {
+    if (token !== walkthroughRunId || walkthroughPaused) return;
+    setVoiceStatus("Moving to the next relevant portal…", "ready");
+    queueWalkthroughAdvance(token, 1300);
+  };
+  utterance.onerror = function () {
+    if (token === walkthroughRunId && !walkthroughPaused) queueWalkthroughAdvance(token, 9000);
+  };
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+  queueWalkthroughAdvance(token, 18000);
+}
+
+function narrateCinematicIntro() {
+  if (!soundOn || !("speechSynthesis" in window)) return;
+  const utterance = new SpeechSynthesisUtterance("I am Guardian. One change can touch an entire life, so I do not wait for seven separate problems. I detect the context, awaken only the worlds that matter, and coordinate them under your permission. Watch the seven portals open around me.");
+  utterance.lang = "en-CA";
+  utterance.rate = 0.87;
+  utterance.pitch = 0.86;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+function narrateWalkthroughFinal() {
+  if (!soundOn || !("speechSynthesis" in window)) return;
+  const utterance = new SpeechSynthesisUtterance("The full coordination is complete. One launch-day signal moved through seven relevant worlds. I advised and prepared the work, but publishing, messages, bookings and home-device changes remain paused for your approval. You stay in control.");
+  utterance.lang = "en-CA";
+  utterance.rate = 0.88;
+  utterance.pitch = 0.86;
+  utterance.onstart = function () { setVoiceStatus("Guardian is delivering the final briefing…", "speaking"); };
+  utterance.onend = function () { setVoiceStatus("Full Guardian run complete. Approval decisions are ready below.", "ready"); };
+  window.speechSynthesis.speak(utterance);
+}
+
+function showWalkthroughStep(index, autoAdvance) {
+  if (!walkthroughData) return;
+  if (index >= walkthroughData.walkthrough.steps.length) {
+    finishWalkthrough();
+    return;
+  }
+  const step = walkthroughData.walkthrough.steps[Math.max(0, index)];
+  walkthroughIndex = Math.max(0, index);
+  stopWalkthroughVoice();
+  const token = walkthroughRunId;
+  const portalIndex = portals.findIndex(function (portal) { return portal.name === step.domain; });
+  openPortal(portals[portalIndex], portalIndex, {walkthrough:true});
+  $("#walkthroughStage").hidden = false;
+  $("#walkthroughStage").classList.remove("complete");
+  $("#walkthroughTitle").textContent = walkthroughData.walkthrough.title;
+  $("#walkthroughCount").textContent = (walkthroughIndex + 1) + " / " + walkthroughData.walkthrough.steps.length;
+  $("#walkthroughProgressBar").style.width = (((walkthroughIndex + 1) / walkthroughData.walkthrough.steps.length) * 100) + "%";
+  $("#walkthroughPhase").textContent = step.phase;
+  $("#walkthroughDomain").textContent = step.domain.toUpperCase() + " AGENT";
+  $("#walkthroughStepTitle").textContent = step.title;
+  $("#walkthroughNarration").textContent = step.narration;
+  $("#walkthroughSignal").textContent = step.signal;
+  $("#walkthroughReceived").textContent = step.received;
+  $("#walkthroughGuardian").textContent = step.guardian;
+  $("#walkthroughPermission").textContent = step.permission;
+  $("#guardianState").textContent = step.guardian;
+  $("#walkthroughBack").disabled = walkthroughIndex === 0;
+  $("#walkthroughNext").disabled = false;
+  $("#walkthroughNext").textContent = walkthroughIndex === walkthroughData.walkthrough.steps.length - 1 ? "Show coordinated plan →" : "Next portal →";
+  $("#walkthroughPause").disabled = false;
+  updateWalkthroughTimeline(walkthroughIndex, false);
+  addLog(step.domain + " agent: " + step.phase.toLowerCase() + " complete", "Full live run");
+  $("#walkthroughStage").scrollIntoView({behavior:"smooth",block:"start"});
+  if (autoAdvance && !walkthroughPaused) narrateWalkthroughStep(step, token);
+  else setVoiceStatus("Walkthrough paused on " + step.domain + ".", "ready");
+}
+
+function finishWalkthrough() {
+  if (!walkthroughData) return;
+  stopWalkthroughVoice();
+  walkthroughIndex = walkthroughData.walkthrough.steps.length;
+  const stage = $("#walkthroughStage");
+  stage.classList.add("complete");
+  $("#walkthroughCount").textContent = "7 / 7 · COMPLETE";
+  $("#walkthroughProgressBar").style.width = "100%";
+  $("#walkthroughPhase").textContent = "COMPLETE";
+  $("#walkthroughDomain").textContent = "GUARDIAN";
+  $("#walkthroughStepTitle").textContent = "The whole launch day is coordinated";
+  $("#walkthroughNarration").textContent = walkthroughData.walkthrough.summary;
+  $("#walkthroughSignal").textContent = "One founder launch-day conflict";
+  $("#walkthroughReceived").textContent = "Seven relevant portal agents · six necessary exchanges";
+  $("#walkthroughGuardian").textContent = "Advice and preparations are complete. The user remains in control.";
+  $("#walkthroughPermission").textContent = walkthroughData.plan.coordination.decision;
+  $("#walkthroughNext").disabled = true;
+  $("#walkthroughNext").textContent = "Run complete ✓";
+  $("#walkthroughPause").disabled = true;
+  updateWalkthroughTimeline(0, true);
+  renderPlan(walkthroughData.plan, []);
+  setVoiceStatus("Full Guardian run complete. Approval decisions are ready below.", "ready");
+  addLog("Seven-portal live run completed; external actions remain permission-gated", "Guardian");
+  narrateWalkthroughFinal();
+}
+
+async function startFullWalkthrough() {
+  if (!experience.classList.contains("ready")) {
+    pendingWalkthroughLaunch = true;
+    awaken();
+    narrateCinematicIntro();
+    return;
+  }
+  const launchButtons = [$("#scenarioDemoButton"), $("#fullDemoButton")];
+  launchButtons.forEach(function (button) { button.disabled = true; button.classList.add("running"); });
+  setVoiceStatus("Guardian is loading the complete seven-portal run…", "thinking");
   try {
-    const response = await fetch("/api/scenario", {method:"POST"});
+    const response = await fetch("/api/walkthrough", {method:"POST"});
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Scenario could not start");
+    if (!response.ok) throw new Error(data.error || "Full walkthrough could not start");
+    walkthroughData = data;
+    walkthroughPaused = false;
+    $("#walkthroughPause").textContent = "Pause";
+    $("#walkthroughPause").setAttribute("aria-pressed", "false");
     saveHubState(data.statePatch || {});
-    renderSharedState(activePortal.name);
-    renderPlan(data.plan, []);
-    speakPlan(data.plan, data.mode, 0);
-    addLog("Founder evening conflict coordinated across " + data.plan.domains.join(", "), "Guardian scenario");
-    button.querySelector("b").textContent = "Scenario coordinated — review approvals below";
+    renderWalkthroughPortals();
+    $("#results").hidden = true;
+    showWalkthroughStep(0, true);
   } catch (error) {
     toast(error.message);
-    button.querySelector("b").textContent = "Run the founder evening conflict";
+    setVoiceStatus("The full run could not start. Try again.", "error");
   } finally {
-    button.disabled = false;
-    button.classList.remove("running");
+    launchButtons.forEach(function (button) { button.disabled = false; button.classList.remove("running"); });
   }
+}
+
+$("#scenarioDemoButton").addEventListener("click", startFullWalkthrough);
+$("#fullDemoButton").addEventListener("click", startFullWalkthrough);
+$("#walkthroughBack").addEventListener("click", function () {
+  walkthroughPaused = true;
+  $("#walkthroughPause").textContent = "Continue";
+  $("#walkthroughPause").setAttribute("aria-pressed", "true");
+  showWalkthroughStep(Math.max(0, walkthroughIndex - 1), false);
+});
+$("#walkthroughNext").addEventListener("click", function () {
+  walkthroughPaused = true;
+  $("#walkthroughPause").textContent = "Continue";
+  $("#walkthroughPause").setAttribute("aria-pressed", "true");
+  showWalkthroughStep(walkthroughIndex + 1, false);
+});
+$("#walkthroughPause").addEventListener("click", function () {
+  walkthroughPaused = !walkthroughPaused;
+  this.textContent = walkthroughPaused ? "Continue" : "Pause";
+  this.setAttribute("aria-pressed", String(walkthroughPaused));
+  if (walkthroughPaused) stopWalkthroughVoice();
+  else showWalkthroughStep(Math.min(walkthroughIndex, walkthroughData.walkthrough.steps.length - 1), true);
+});
+$("#walkthroughRestart").addEventListener("click", function () {
+  walkthroughPaused = false;
+  $("#walkthroughPause").textContent = "Pause";
+  $("#walkthroughPause").setAttribute("aria-pressed", "false");
+  showWalkthroughStep(0, true);
 });
 
 $("#workspaceClose").addEventListener("click", function () {
+  if (walkthroughData && walkthroughIndex >= 0 && walkthroughIndex < walkthroughData.walkthrough.steps.length) {
+    walkthroughPaused = true;
+    $("#walkthroughPause").textContent = "Continue";
+    $("#walkthroughPause").setAttribute("aria-pressed", "true");
+    stopWalkthroughVoice();
+  }
   $("#portalWorkspace").classList.remove("open");
   $("#portalWorkspace").setAttribute("aria-hidden", "true");
 });
