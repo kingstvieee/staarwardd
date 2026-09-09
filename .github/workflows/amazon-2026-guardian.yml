@@ -1,0 +1,25 @@
+name: Amazon 2026 Guardian Integrity
+
+on:
+  push:
+    branches: [amazon-2026]
+  pull_request:
+    branches: [main]
+
+jobs:
+  guardian-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Guardian core tests
+        run: node --test competition/Amazon2026/test/*.test.mjs
+      - name: Syntax check competition endpoints
+        run: |
+          node --check competition/Amazon2026/src/guardian-core.mjs
+          node --check competition/Amazon2026/src/mcp-server.mjs
+          node --check competition/Amazon2026/src/aws-guardian-agent.mjs
+          node --check api/amazon-guardian.mjs
+          node --check public/amazon-judge.js
