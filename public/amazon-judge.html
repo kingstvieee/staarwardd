@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>STAARWAARDD Guardian — Amazon Judge Mode</title>
+  <link rel="stylesheet" href="/amazon-judge.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">AMAZON DEVELOPER HACKATHON 2026 · ALEXA+ · AWS BUILDER</p>
+      <h1>One signal. Seven worlds. One Guardian.</h1>
+      <p class="lede">Judge mode isolates the competition proof from the existing STAARWAARDD prototype. Guardian receives one Alexa+-style request, coordinates the relevant portals, keeps sensitive actions behind approval, and reports measurable impact.</p>
+      <div class="actions">
+        <button id="runJudge" type="button">Run 90-second judge scenario</button>
+        <a href="/">Open original prototype</a>
+      </div>
+    </header>
+
+    <section class="architecture" aria-label="Architecture">
+      <div><span>INTERFACE</span><b>Alexa+</b></div>
+      <div><span>PROTOCOL</span><b>MCP Streamable HTTP</b></div>
+      <div><span>ORCHESTRATOR</span><b>Guardian</b></div>
+      <div><span>AWS</span><b>Strands + Bedrock</b></div>
+    </section>
+
+    <section class="request-card">
+      <label for="request">Judge request</label>
+      <textarea id="request" rows="3">Guardian, my investor pitch is running late. Keep my launch, fitting, anniversary dinner, gift delivery, and home arrival on track without sending or changing anything unless I approve it.</textarea>
+      <button id="runCustom" type="button">Run Guardian</button>
+    </section>
+
+    <section id="status" class="status" aria-live="polite">Ready.</section>
+
+    <section id="result" hidden>
+      <div class="score-grid">
+        <article><span>TECH</span><b>5/5 target</b><p id="techProof"></p></article>
+        <article><span>DESIGN</span><b>5/5 target</b><p id="designProof"></p></article>
+        <article><span>IMPACT</span><b>5/5 target</b><p id="impactProof"></p></article>
+        <article><span>IDEA</span><b>5/5 target</b><p id="ideaProof"></p></article>
+      </div>
+
+      <section class="guardian-briefing">
+        <p class="eyebrow">GUARDIAN BRIEFING</p>
+        <h2 id="summary"></h2>
+        <p id="decision"></p>
+      </section>
+
+      <section>
+        <h2>Portal coordination</h2>
+        <div id="portals" class="portals"></div>
+      </section>
+
+      <section>
+        <h2>Cross-portal exchanges</h2>
+        <ol id="exchanges" class="timeline"></ol>
+      </section>
+
+      <section>
+        <h2>Prepared actions</h2>
+        <div id="actionsList" class="action-list"></div>
+      </section>
+
+      <section class="impact">
+        <h2>Judge-visible impact</h2>
+        <div id="metrics" class="metrics"></div>
+      </section>
+    </section>
+  </main>
+<script src="/amazon-judge.js" defer></script>
+</body>
+</html>
