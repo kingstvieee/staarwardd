@@ -1,0 +1,17 @@
+{
+  "name": "staarwardd-amazon-2026",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "mcp": "node src/mcp-server.mjs",
+    "demo": "node src/demo-run.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "@strands-agents/sdk": "1.17.0",
+    "zod": "^4.0.0"
+  }
+}
