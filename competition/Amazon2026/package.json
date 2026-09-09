@@ -6,7 +6,8 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "mcp": "node src/mcp-server.mjs",
-    "demo": "node src/demo-run.mjs"
+    "demo": "node src/demo-run.mjs",
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "2.0.0",
