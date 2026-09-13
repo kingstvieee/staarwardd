@@ -170,3 +170,4 @@ See CODEX_START_HERE.md, TROUBLESHOOTING.md, and DEMO_SCENARIOS.md.
 ## Working-name clearance
 
 The exact spelling StaarWardd produced no meaningful exact-match results in preliminary open-web, handle, AI-app, or public trademark-index searches performed on July 19, 2026. That is useful evidence of distinctiveness, not a guarantee of worldwide availability or legal ownership. Before commercial launch, run formal Canadian and international trademark clearance, secure the domain and key social handles, and file in the relevant software and AI service classes.
+
