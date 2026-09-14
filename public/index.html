@@ -11,16 +11,18 @@
   <link rel="preload" href="/staarwardd-summoning-sword-v9.png" as="image" type="image/png">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/cinematic-patch.css?v=flight-restore-1">
+  <link rel="stylesheet" href="/product-foundation.css">
 </head>
 <body>
   <a class="skip-link" href="#command">Skip to command</a>
   <main class="experience" id="experience">
     <p class="sr-only">StaarWardd is a cinematic whole-life assistant with seven interactive portals.</p>
     <div class="scene" id="scene">
+      <div class="guardian-gate" aria-hidden="true"><span class="gate-ring gate-ring-one"></span><span class="gate-ring gate-ring-two"></span><span class="gate-core"></span><i class="gate-lightning gate-lightning-a"></i><i class="gate-lightning gate-lightning-b"></i><i class="gate-lightning gate-lightning-c"></i></div>
       <div class="cinematic-stage" aria-hidden="true">
         <img class="stage-base guardian-flight-still" src="/staarwardd-guardian-toronto-v9.png" alt="" decoding="sync" fetchpriority="high">
-        <img class="summoning-sword" src="/staarwardd-summoning-sword-v9.png" alt="" decoding="async">
-        <img class="summoning-bubble" src="/staarwardd-summoning-bubble-v9.png" alt="" decoding="async">
+        <img class="summoning-sword legacy-summon-prop" src="/staarwardd-summoning-sword-v9.png" alt="" decoding="async">
+        <img class="summoning-bubble legacy-summon-prop" src="/staarwardd-summoning-bubble-v9.png" alt="" decoding="async">
       </div>
       <div class="cinematic-brand" aria-hidden="true">
         <p>THE WHOLE-LIFE AI</p>
@@ -63,20 +65,22 @@
             <h3 id="worldTitle">Your world is ready</h3>
             <span id="worldDescription"></span>
           </div>
-          <div class="world-status" id="worldStatus" aria-label="Current portal state"></div>
-          <div class="shared-state" id="sharedState" aria-live="polite" hidden></div>
-          <div class="world-zones" id="worldZones" aria-label="Interactive areas"></div>
+          <div class="world-status" id="worldStatus" role="group" aria-label="Current portal state"></div>
+          <div class="shared-state" id="sharedState" role="status" aria-live="polite" hidden></div>
+          <div class="world-zones" id="worldZones" role="group" aria-label="Interactive areas"></div>
           <button class="world-feature" id="worldFeature" type="button" hidden></button>
           <aside class="guardian-presence" aria-label="Guardian orchestration">
             <span class="guardian-core" aria-hidden="true">✦</span>
-            <div><p>GUARDIAN IS PRESENT</p><b id="guardianState">Watching context - with your permission</b></div>
+            <div><p>GUARDIAN IS PRESENT</p><b id="guardianState">Watching relevant signals—acting only by permission</b></div>
           </aside>
         </section>
-        <section class="orchestration-strip" aria-label="How Guardian coordinates your life">
-          <div><span>1</span><b>Detects context</b></div><i>→</i>
-          <div><span>2</span><b>Activates relevant agents</b></div><i>→</i>
-          <div><span>3</span><b>Portals exchange signals</b></div><i>→</i>
-          <div><span>4</span><b>Prepares or acts by permission</b></div>
+        <section aria-label="How Guardian coordinates your life">
+          <ol class="orchestration-strip">
+            <li><span>1</span><b>Detects context</b></li>
+            <li><span>2</span><b>Activates relevant agents</b></li>
+            <li><span>3</span><b>Portals exchange signals</b></li>
+            <li><span>4</span><b>Prepares or acts by permission</b></li>
+          </ol>
         </section>
         <button class="scenario-demo" id="scenarioDemoButton" type="button"><span>FULL LIVE GUARDIAN RUN</span><b>Experience all seven portals working together</b><i>Narrated · paced · permission-controlled →</i></button>
         <section class="walkthrough-stage" id="walkthroughStage" hidden aria-live="polite" aria-label="Full Guardian walkthrough">
@@ -112,7 +116,7 @@
         </form>
         <div class="plan" id="results" hidden aria-live="polite">
           <div class="plan-summary"><p>YOUR StaarWardd</p><h3 id="resultSummary"></h3><div id="activeDomains"></div></div>
-          <section class="coordination-trace" id="coordinationTrace" aria-label="Guardian coordination trace">
+          <section class="coordination-trace" id="coordinationTrace" aria-label="Guardian coordination trace" hidden>
             <header><p>GUARDIAN COORDINATION</p><span id="coordinationDecision"></span></header>
             <div class="coordination-agents" id="coordinationAgents"></div>
             <ol id="coordinationExchanges"></ol>
@@ -130,6 +134,8 @@
   </main>
   <dialog id="approvalDialog"><form method="dialog"><p>HUMAN APPROVAL REQUIRED</p><h2>StaarWardd pauses here.</h2><div id="approvalText"></div><aside><b>No silent actions.</b><span>This prototype simulates approval and never contacts anyone, spends money, books, publishes, or deletes.</span></aside><footer><button value="cancel">Not now</button><button value="approve">Approve simulation</button></footer></form></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/entry-context.js"></script>
+  <script src="/guardian-context.js"></script>
   <script type="module" src="/app.js?v=full-live-run-10"></script>
 </body>
 </html>

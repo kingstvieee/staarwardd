@@ -47,8 +47,20 @@ function readHubState() {
 }
 
 function saveHubState(patch) {
-  hubState = Object.assign({}, hubState, patch);
+  const domainKeys = portals.map(function (portal) { return portal.name.toLowerCase(); });
+  const metadata = Object.fromEntries(Object.entries(hubState).filter(function (entry) {
+    return !domainKeys.includes(entry[0]);
+  }));
+  hubState = Object.assign({}, metadata, patch);
   localStorage.setItem("staarwardd-hub-state", JSON.stringify(hubState));
+}
+
+function formatStateValue(value) {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value == null) return "";
+  try { return JSON.stringify(value); }
+  catch (error) { return String(value); }
 }
 
 portals.forEach(function (portal, index) {
@@ -246,15 +258,18 @@ function renderPortalWorld(portal) {
 
 function renderSharedState(domain) {
   const shared = $("#sharedState");
+  const world = $("#portalWorld");
   const state = hubState[domain.toLowerCase()];
   if (!state) {
     shared.hidden = true;
     shared.innerHTML = "";
+    world.classList.remove("shared-state-visible");
     return;
   }
   shared.hidden = false;
+  world.classList.add("shared-state-visible");
   shared.innerHTML = '<p>SHARED LIVE STATE</p>' + Object.entries(state).map(function (entry) {
-    return '<div><span>' + esc(entry[0].replace(/([A-Z])/g, " $1")) + '</span><b>' + esc(entry[1]) + '</b></div>';
+    return '<div><span>' + esc(entry[0].replace(/([A-Z])/g, " $1")) + '</span><b>' + esc(formatStateValue(entry[1])) + '</b></div>';
   }).join("");
 }
 
@@ -348,6 +363,7 @@ function narrateWalkthroughFinal() {
   utterance.pitch = 0.86;
   utterance.onstart = function () { setVoiceStatus("Guardian is delivering the final briefing…", "speaking"); };
   utterance.onend = function () { setVoiceStatus("Full Guardian run complete. Approval decisions are ready below.", "ready"); };
+  window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 }
 
@@ -362,6 +378,11 @@ function showWalkthroughStep(index, autoAdvance) {
   stopWalkthroughVoice();
   const token = walkthroughRunId;
   const portalIndex = portals.findIndex(function (portal) { return portal.name === step.domain; });
+  if (portalIndex === -1) {
+    toast("Walkthrough data is out of sync. Please restart the full run.");
+    setVoiceStatus("The walkthrough data is invalid. Restart the full run.", "error");
+    return;
+  }
   openPortal(portals[portalIndex], portalIndex, {walkthrough:true});
   $("#walkthroughStage").hidden = false;
   $("#walkthroughStage").classList.remove("complete");
@@ -416,6 +437,7 @@ function finishWalkthrough() {
 
 async function startFullWalkthrough() {
   if (!experience.classList.contains("ready")) {
+    if (pendingWalkthroughLaunch) return;
     pendingWalkthroughLaunch = true;
     awaken();
     narrateCinematicIntro();
@@ -459,11 +481,19 @@ $("#walkthroughNext").addEventListener("click", function () {
   showWalkthroughStep(walkthroughIndex + 1, false);
 });
 $("#walkthroughPause").addEventListener("click", function () {
-  walkthroughPaused = !walkthroughPaused;
-  this.textContent = walkthroughPaused ? "Continue" : "Pause";
-  this.setAttribute("aria-pressed", String(walkthroughPaused));
-  if (walkthroughPaused) stopWalkthroughVoice();
-  else showWalkthroughStep(Math.min(walkthroughIndex, walkthroughData.walkthrough.steps.length - 1), true);
+  if (!walkthroughData) return;
+  if (!walkthroughPaused) {
+    walkthroughPaused = true;
+    this.textContent = "Continue";
+    this.setAttribute("aria-pressed", "true");
+    stopWalkthroughVoice();
+    return;
+  }
+  if (walkthroughIndex >= walkthroughData.walkthrough.steps.length) return;
+  walkthroughPaused = false;
+  this.textContent = "Pause";
+  this.setAttribute("aria-pressed", "false");
+  showWalkthroughStep(Math.min(walkthroughIndex, walkthroughData.walkthrough.steps.length - 1), true);
 });
 $("#walkthroughRestart").addEventListener("click", function () {
   walkthroughPaused = false;
@@ -524,6 +554,7 @@ function renderPlan(plan, sources) {
 }
 
 function renderCoordination(coordination, domains) {
+  $("#coordinationTrace").hidden = false;
   const trace = coordination || {
     detected:"Context detected from the current request.",
     agents:domains,
