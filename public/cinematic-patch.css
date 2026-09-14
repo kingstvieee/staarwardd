@@ -1,0 +1,49 @@
+/* STAARWAARDD cinematic motion restore: keeps current portal logic, restores visible flight energy. */
+.cinematic-stage{position:absolute;inset:0;overflow:hidden;perspective:1200px}
+.cinematic-stage::before,.cinematic-stage::after{content:"";position:absolute;inset:-12%;pointer-events:none;z-index:2;opacity:0}
+.cinematic-stage::before{background:radial-gradient(circle at 50% 48%,rgba(255,234,174,.38),rgba(76,214,255,.12) 23%,transparent 52%);mix-blend-mode:screen;filter:blur(8px)}
+.cinematic-stage::after{background:repeating-radial-gradient(ellipse at 50% 45%,rgba(111,225,255,.18) 0 1px,transparent 2px 34px);transform:scale(.7);filter:blur(.3px)}
+.guardian-flight-still{transform-origin:50% 44%;will-change:transform,filter,opacity}
+.experience.awakening .guardian-flight-still{animation:staar-camera-flight 6.15s cubic-bezier(.13,.75,.12,1) both}
+.experience.awakening .cinematic-stage::before{animation:staar-flight-glow 6.15s ease-out both}
+.experience.awakening .cinematic-stage::after{animation:staar-flight-wake 4.9s cubic-bezier(.18,.7,.18,1) both}
+.experience.awakening .scene{animation:staar-camera-rumble 5.8s ease-in-out both}
+.experience.ready .guardian-flight-still{transform:scale(1.035) translate3d(0,-.5%,0);animation:staar-living-breath 5.2s ease-in-out infinite alternate}
+.experience.maple .guardian-flight-still{filter:brightness(1.16) contrast(1.08) saturate(1.14)}
+.experience.motion-off .guardian-flight-still,.experience.motion-off .cinematic-stage::before,.experience.motion-off .cinematic-stage::after,.experience.motion-off .scene{animation:none!important}
+@keyframes staar-camera-flight{
+  0%{transform:scale(1.72) translate3d(0,13%,0);filter:brightness(.58) blur(7px) saturate(.72);opacity:.22}
+  10%{opacity:1;filter:brightness(.88) blur(3px) saturate(.92)}
+  28%{transform:scale(1.36) translate3d(-2%,7%,0);filter:brightness(1.02) blur(.8px) saturate(1.04)}
+  47%{transform:scale(1.18) translate3d(1.2%,2%,0);filter:brightness(1.09) blur(0) saturate(1.09)}
+  66%{transform:scale(1.08) translate3d(-.6%,-.8%,0);filter:brightness(1.13) saturate(1.12)}
+  82%{transform:scale(1.025) translate3d(.35%,-.2%,0);filter:brightness(1.08) saturate(1.08)}
+  100%{transform:scale(1.035) translate3d(0,-.5%,0);filter:brightness(1.03) saturate(1.03);opacity:1}
+}
+@keyframes staar-flight-glow{
+  0%{opacity:0;transform:scale(.42)}
+  15%{opacity:.18}
+  38%{opacity:.72;transform:scale(.82)}
+  68%{opacity:.38;transform:scale(1.16)}
+  100%{opacity:0;transform:scale(1.42)}
+}
+@keyframes staar-flight-wake{
+  0%{opacity:0;transform:scale(.35) rotate(0deg)}
+  16%{opacity:.3}
+  55%{opacity:.58;transform:scale(1.04) rotate(1deg)}
+  100%{opacity:0;transform:scale(1.78) rotate(-1deg)}
+}
+@keyframes staar-camera-rumble{
+  0%,100%{transform:translate(-50%,-50%)}
+  18%{transform:translate(calc(-50% - 3px),calc(-50% + 2px))}
+  24%{transform:translate(calc(-50% + 4px),calc(-50% - 2px))}
+  31%{transform:translate(calc(-50% - 2px),calc(-50% - 1px))}
+  44%{transform:translate(calc(-50% + 2px),calc(-50% + 1px))}
+  70%{transform:translate(-50%,-50%)}
+}
+@keyframes staar-living-breath{
+  from{transform:scale(1.03) translate3d(0,-.4%,0);filter:brightness(1.01) saturate(1.02)}
+  to{transform:scale(1.045) translate3d(0,-.8%,0);filter:brightness(1.07) saturate(1.08)}
+}
+@media(max-width:720px){.experience.awakening .guardian-flight-still{animation-duration:5.5s}.cinematic-stage::after{inset:-22%}}
+@media(prefers-reduced-motion:reduce){.experience.awakening .guardian-flight-still,.experience.awakening .cinematic-stage::before,.experience.awakening .cinematic-stage::after,.experience.awakening .scene,.experience.ready .guardian-flight-still{animation:none!important}}

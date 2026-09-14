@@ -1,13 +1,13 @@
 const $ = function (selector) { return document.querySelector(selector); };
 
 const portals = [
-  {name:"Creativity",icon:"✦",promise:"Inspire · Imagine · Create",prompts:["Give me a 45-minute creative ritual","Turn my scattered ideas into one project","Balance creative work with rest"],tools:["Idea distiller","Creative ritual","Finish-line builder"]},
-  {name:"Work",icon:"▥",promise:"Focus · Grow · Achieve",prompts:["Build a realistic focus day","Prepare my next client deliverable","Protect deep work and reduce overload"],tools:["Priority triage","Deep-work shield","Deliverable builder"]},
-  {name:"Home",icon:"⌂",promise:"Comfort · Harmony · Sanctuary",prompts:["Create a gentle home reset","Plan groceries, dinner, and cleanup","Organize this week without overwhelm"],tools:["Room reset","Meal rhythm","Household sequence"]},
-  {name:"Wellbeing",icon:"◉",promise:"Heal · Balance · Thrive",prompts:["Help me restore my energy today","Plan movement, hydration, and sleep","Make a low-stress wellbeing rhythm"],tools:["Energy check","Recovery rhythm","Movement plan"]},
-  {name:"Relationships",icon:"∞",promise:"Connect · Love · Support",prompts:["Help me reconnect with someone in my own voice","Help me prepare a kind boundary conversation","Plan meaningful family time without overcommitting"],tools:["Connection compass","Boundary rehearsal","Message studio"]},
-  {name:"Community",icon:"◇",promise:"Belong · Uplift · Grow Together",prompts:["Map one Toronto community contribution that fits my energy","Compare a local event, organization, and neighbour-scale action","Help me contribute without burning out"],tools:["Local impact map","Energy budget","Outreach planner"]},
-  {name:"Style",icon:"△",promise:"Express · Elevate · Empower",prompts:["Build an outfit formula from what I already own","Prepare a complete weather-aware look for tomorrow","Create a keep, tailor, repair, restyle, release wardrobe edit"],tools:["Outfit studio","Wardrobe edit","Event-ready plan"]}
+  {name:"Creativity",icon:"✦",promise:"The futuristic creation studio",kicker:"DIGGITSTAAR CREATION STUDIO",description:"A serious production environment where ideas move through media, design, AI creation, review and publishing.",status:[["Studio","Active"],["Projects","3 in motion"],["Publish gate","Approval on"]],zones:[["Creation table","Shape the concept"],["Media wall","Edit image, sound and video"],["AI lab","Generate and refine"],["Publishing bay","Review before release"]],feature:"Enter DIGGITSTAAR workflows",prompts:["Turn my concept into a production workflow","Prepare this media project for review","Coordinate design, content and publishing"],tools:["Production pipeline","Media direction","Approval-ready publish"]},
+  {name:"Work",icon:"▥",promise:"The Guardian command centre",kicker:"GUARDIAN COMMAND CENTRE",description:"Schedule, projects, meetings and communications converge here so conflicts can be resolved across every relevant portal.",status:[["Today","4 commitments"],["Conflict scan","1 detected"],["Focus window","Protected"]],zones:[["Schedule wall","See time and conflicts"],["Project table","Move priority work"],["Communications","Prepare responses"],["Cross-portal map","Coordinate the whole day"]],feature:"Open command briefing",prompts:["Brief me on today and resolve conflicts","Coordinate my projects, meetings and messages","Protect focus across every portal"],tools:["Conflict command","Project control","Communications desk"]},
+  {name:"Home",icon:"⌂",promise:"The intelligent living environment",kicker:"LIVE SMART-HOME ENVIRONMENT",description:"Your rooms, devices, routines, security and household state respond as one—with arrival and departure intelligence.",status:[["Home state","Secure"],["Devices","12 connected"],["Arrival","Ready for you"]],zones:[["Living environment","See the household state"],["Routines","Morning, away and night"],["Security","Doors, sensors and alerts"],["Household","Supplies, care and maintenance"]],feature:"Enter STAAR Access",prompts:["Prepare the home for my arrival","Run an evening household and security check","Coordinate devices, routines and supplies"],tools:["Arrival intelligence","Guardian automation","Household state"]},
+  {name:"Wellbeing",icon:"◉",promise:"A calmer space for sustainable rhythms",kicker:"CALM CONTEXT ENVIRONMENT",description:"Check-ins, routines and permitted wellbeing context help Guardian coordinate support without diagnosing or replacing professional care.",status:[["Energy check-in","Not shared"],["Routine","Evening reset"],["Privacy","Permission scoped"]],zones:[["Quiet centre","Pause and check in"],["Routine path","Food, movement and rest"],["Context vault","Control what is shared"],["Support bridge","Prepare useful next steps"]],feature:"Review wellbeing permissions",prompts:["Build a calm routine around my day","Help me check in without diagnosing me","Coordinate permitted wellbeing context with my schedule"],tools:["Gentle check-in","Routine composer","Permission controls"]},
+  {name:"Relationships",icon:"∞",promise:"A living space for the people who matter",kicker:"LIVING RELATIONSHIP SPACE",description:"People, commitments, shared memories, plans and communication stay connected without reducing real relationships to generic prompts.",status:[["People","6 close connections"],["Commitments","2 upcoming"],["Messages","1 to prepare"]],zones:[["People constellation","Open a real relationship"],["Memory gallery","Recall shared context"],["Commitment table","Protect promises and plans"],["Communication room","Prepare a human message"]],feature:"Open people constellation",prompts:["Show the people and commitments needing attention","Prepare a message using our real context","Plan meaningful time without losing existing promises"],tools:["People context","Commitment keeper","Communication room"]},
+  {name:"Community",icon:"◇",promise:"The real-world connection layer",kicker:"TORONTO CONNECTION LAYER",description:"Discover accessible events, places and opportunities nearby, then expand into trusted global community experiences.",status:[["Location","Toronto"],["Nearby","8 possibilities"],["Access filters","On"]],zones:[["Toronto map","Explore places nearby"],["Opportunity beacon","Find ways to participate"],["Accessibility layer","Filter for real access"],["Global window","Connect beyond the city"]],feature:"Explore nearby connections",prompts:["Find accessible Toronto events that fit my energy","Compare nearby places and opportunities","Connect a local plan to my wider community goals"],tools:["Local discovery","Access-aware map","Opportunity matcher"]},
+  {name:"Style",icon:"△",promise:"Walk into your future wardrobe",kicker:"FUTURISTIC WARDROBE · RISING STAARDFORM",description:"A physical-feeling dressing room of illuminated racks, mirrors, outfits and a responsive Guardian Stylist—not a storefront pasted onto a page.",status:[["Wardrobe","Synced"],["Fitting mirror","Ready"],["Stylist","Present"]],zones:[["Illuminated racks","Browse complete looks"],["Fitting mirror","See silhouette and fit"],["Outfit plinth","Build the full look"],["Stylist station","Refine with Guardian"]],feature:"Enter RISING STAARDFORM atelier",prompts:["Walk me through a complete outfit fitting","Style a look from my real wardrobe","Build a RISING STAARDFORM look for my event"],tools:["Fitting mirror","Wardrobe intelligence","Guardian Stylist"]}
 ];
 
 const PORTAL_START = 6.25;
@@ -33,6 +33,23 @@ let pending = null;
 let sequenceTimers = [];
 let sequenceId = 0;
 let log = JSON.parse(localStorage.getItem("staarwardd-log") || localStorage.getItem("starward-log") || localStorage.getItem("blessync-log") || "[]");
+let hubState = readHubState();
+let walkthroughData = null;
+let walkthroughIndex = -1;
+let walkthroughPaused = false;
+let walkthroughTimer = null;
+let walkthroughRunId = 0;
+let pendingWalkthroughLaunch = false;
+
+function readHubState() {
+  try { return JSON.parse(localStorage.getItem("staarwardd-hub-state") || "{}"); }
+  catch (error) { return {}; }
+}
+
+function saveHubState(patch) {
+  hubState = Object.assign({}, hubState, patch);
+  localStorage.setItem("staarwardd-hub-state", JSON.stringify(hubState));
+}
 
 portals.forEach(function (portal, index) {
   const button = document.createElement("button");
@@ -136,6 +153,10 @@ function completeAwakening(run) {
     const portalIndex = portals.findIndex(function (portal) { return portal.name.toLowerCase() === requestedPortal.toLowerCase(); });
     if (portalIndex >= 0) schedule(function () { openPortal(portals[portalIndex], portalIndex); }, 450);
   }
+  if (pendingWalkthroughLaunch) {
+    pendingWalkthroughLaunch = false;
+    schedule(startFullWalkthrough, 650);
+  }
 }
 
 function replay() {
@@ -152,7 +173,7 @@ if (launchParams.get("autoplay") === "1") {
   schedule(awaken, 180);
 }
 
-function openPortal(portal, index) {
+function openPortal(portal, index, options) {
   if (!experience.classList.contains("ready")) return;
   activePortal = portal;
   score.portalOpen(index);
@@ -160,6 +181,7 @@ function openPortal(portal, index) {
   $("#workspaceEyebrow").textContent = portal.icon + " " + portal.name.toUpperCase() + " PORTAL";
   $("#workspaceTitle").textContent = portal.name;
   $("#workspacePromise").textContent = portal.promise;
+  renderPortalWorld(portal);
   $("#quickPrompts").innerHTML = "";
   $("#portalCapabilities").innerHTML = "<p>SPECIALIST TOOLS</p>" + portal.tools.map(function (tool, toolIndex) {
     return '<button type="button" data-tool="' + toolIndex + '">' + esc(tool) + '</button>';
@@ -185,10 +207,278 @@ function openPortal(portal, index) {
   $("#portalWorkspace").setAttribute("aria-hidden", "false");
   $("#results").hidden = true;
   addLog(portal.name + " portal opened", "Portal");
-  setTimeout(function () { $("#command").focus(); }, 500);
+  if (!options || !options.walkthrough) setTimeout(function () { $("#command").focus(); }, 500);
 }
 
+function renderPortalWorld(portal) {
+  const world = $("#portalWorld");
+  world.dataset.portal = portal.name.toLowerCase();
+  $("#worldKicker").textContent = portal.kicker;
+  $("#worldTitle").textContent = portal.name === "Style" ? "Step inside your wardrobe" : portal.promise;
+  $("#worldDescription").textContent = portal.description;
+  $("#worldStatus").innerHTML = portal.status.map(function (item) {
+    return '<div><span>' + esc(item[0]) + '</span><b>' + esc(item[1]) + '</b></div>';
+  }).join("");
+  $("#worldZones").innerHTML = portal.zones.map(function (zone, index) {
+    return '<button type="button" data-zone="' + index + '"><span>0' + (index + 1) + '</span><b>' + esc(zone[0]) + '</b><small>' + esc(zone[1]) + '</small></button>';
+  }).join("");
+  $("#worldZones").querySelectorAll("[data-zone]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      const zone = portal.zones[Number(button.dataset.zone)];
+      $("#command").value = zone[1] + " in my " + portal.name + " portal";
+      $("#command").focus();
+      addLog(zone[0] + " activated", portal.name + " agent");
+    });
+  });
+  const feature = $("#worldFeature");
+  feature.hidden = false;
+  feature.textContent = portal.feature + " →";
+  feature.onclick = function () {
+    $("#command").value = portal.prompts[0];
+    $("#command").focus();
+    addLog(portal.feature + " prepared", portal.name + " agent");
+  };
+  $("#guardianState").textContent = portal.name === "Wellbeing"
+    ? "Coordinating permitted context—never diagnosing"
+    : "Watching relevant signals—acting only by permission";
+  renderSharedState(portal.name);
+}
+
+function renderSharedState(domain) {
+  const shared = $("#sharedState");
+  const state = hubState[domain.toLowerCase()];
+  if (!state) {
+    shared.hidden = true;
+    shared.innerHTML = "";
+    return;
+  }
+  shared.hidden = false;
+  shared.innerHTML = '<p>SHARED LIVE STATE</p>' + Object.entries(state).map(function (entry) {
+    return '<div><span>' + esc(entry[0].replace(/([A-Z])/g, " $1")) + '</span><b>' + esc(entry[1]) + '</b></div>';
+  }).join("");
+}
+
+function clearWalkthroughClock() {
+  if (walkthroughTimer) clearTimeout(walkthroughTimer);
+  walkthroughTimer = null;
+}
+
+function stopWalkthroughVoice() {
+  walkthroughRunId += 1;
+  clearWalkthroughClock();
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+}
+
+function renderWalkthroughPortals() {
+  const list = $("#walkthroughPortals");
+  list.innerHTML = walkthroughData.walkthrough.steps.map(function (step, index) {
+    return '<li><button type="button" data-walkthrough-step="' + index + '"><span>0' + (index + 1) + '</span><b>' + esc(step.domain) + '</b></button></li>';
+  }).join("");
+  list.querySelectorAll("[data-walkthrough-step]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      walkthroughPaused = true;
+      $("#walkthroughPause").textContent = "Continue";
+      $("#walkthroughPause").setAttribute("aria-pressed", "true");
+      showWalkthroughStep(Number(button.dataset.walkthroughStep), false);
+    });
+  });
+}
+
+function updateWalkthroughTimeline(index, complete) {
+  $("#walkthroughPortals").querySelectorAll("button").forEach(function (button, buttonIndex) {
+    button.classList.toggle("current", !complete && buttonIndex === index);
+    button.classList.toggle("complete", complete || buttonIndex < index);
+    if (!complete && buttonIndex === index) button.setAttribute("aria-current", "step");
+    else button.removeAttribute("aria-current");
+  });
+}
+
+function queueWalkthroughAdvance(token, delay) {
+  clearWalkthroughClock();
+  walkthroughTimer = setTimeout(function () {
+    if (token !== walkthroughRunId || walkthroughPaused) return;
+    showWalkthroughStep(walkthroughIndex + 1, true);
+  }, delay);
+}
+
+function narrateWalkthroughStep(step, token) {
+  if (!soundOn || !("speechSynthesis" in window)) {
+    queueWalkthroughAdvance(token, 11000);
+    return;
+  }
+  const utterance = new SpeechSynthesisUtterance(step.narration + " " + step.guardian + " " + step.permission);
+  utterance.lang = "en-CA";
+  utterance.rate = 0.88;
+  utterance.pitch = 0.86;
+  const voices = window.speechSynthesis.getVoices();
+  utterance.voice = voices.find(function (voice) { return /en-CA/i.test(voice.lang); })
+    || voices.find(function (voice) { return /^en/i.test(voice.lang); })
+    || null;
+  utterance.onstart = function () {
+    if (token === walkthroughRunId) setVoiceStatus("Guardian is narrating " + step.domain + "…", "speaking");
+  };
+  utterance.onend = function () {
+    if (token !== walkthroughRunId || walkthroughPaused) return;
+    setVoiceStatus("Moving to the next relevant portal…", "ready");
+    queueWalkthroughAdvance(token, 1300);
+  };
+  utterance.onerror = function () {
+    if (token === walkthroughRunId && !walkthroughPaused) queueWalkthroughAdvance(token, 9000);
+  };
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+  queueWalkthroughAdvance(token, 18000);
+}
+
+function narrateCinematicIntro() {
+  if (!soundOn || !("speechSynthesis" in window)) return;
+  const utterance = new SpeechSynthesisUtterance("I am Guardian. One change can touch an entire life, so I do not wait for seven separate problems. I detect the context, awaken only the worlds that matter, and coordinate them under your permission. Watch the seven portals open around me.");
+  utterance.lang = "en-CA";
+  utterance.rate = 0.87;
+  utterance.pitch = 0.86;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+function narrateWalkthroughFinal() {
+  if (!soundOn || !("speechSynthesis" in window)) return;
+  const utterance = new SpeechSynthesisUtterance("The full coordination is complete. One launch-day signal moved through seven relevant worlds. I advised and prepared the work, but publishing, messages, bookings and home-device changes remain paused for your approval. You stay in control.");
+  utterance.lang = "en-CA";
+  utterance.rate = 0.88;
+  utterance.pitch = 0.86;
+  utterance.onstart = function () { setVoiceStatus("Guardian is delivering the final briefing…", "speaking"); };
+  utterance.onend = function () { setVoiceStatus("Full Guardian run complete. Approval decisions are ready below.", "ready"); };
+  window.speechSynthesis.speak(utterance);
+}
+
+function showWalkthroughStep(index, autoAdvance) {
+  if (!walkthroughData) return;
+  if (index >= walkthroughData.walkthrough.steps.length) {
+    finishWalkthrough();
+    return;
+  }
+  const step = walkthroughData.walkthrough.steps[Math.max(0, index)];
+  walkthroughIndex = Math.max(0, index);
+  stopWalkthroughVoice();
+  const token = walkthroughRunId;
+  const portalIndex = portals.findIndex(function (portal) { return portal.name === step.domain; });
+  openPortal(portals[portalIndex], portalIndex, {walkthrough:true});
+  $("#walkthroughStage").hidden = false;
+  $("#walkthroughStage").classList.remove("complete");
+  $("#walkthroughTitle").textContent = walkthroughData.walkthrough.title;
+  $("#walkthroughCount").textContent = (walkthroughIndex + 1) + " / " + walkthroughData.walkthrough.steps.length;
+  $("#walkthroughProgressBar").style.width = (((walkthroughIndex + 1) / walkthroughData.walkthrough.steps.length) * 100) + "%";
+  $("#walkthroughPhase").textContent = step.phase;
+  $("#walkthroughDomain").textContent = step.domain.toUpperCase() + " AGENT";
+  $("#walkthroughStepTitle").textContent = step.title;
+  $("#walkthroughNarration").textContent = step.narration;
+  $("#walkthroughSignal").textContent = step.signal;
+  $("#walkthroughReceived").textContent = step.received;
+  $("#walkthroughGuardian").textContent = step.guardian;
+  $("#walkthroughPermission").textContent = step.permission;
+  $("#guardianState").textContent = step.guardian;
+  $("#walkthroughBack").disabled = walkthroughIndex === 0;
+  $("#walkthroughNext").disabled = false;
+  $("#walkthroughNext").textContent = walkthroughIndex === walkthroughData.walkthrough.steps.length - 1 ? "Show coordinated plan →" : "Next portal →";
+  $("#walkthroughPause").disabled = false;
+  updateWalkthroughTimeline(walkthroughIndex, false);
+  addLog(step.domain + " agent: " + step.phase.toLowerCase() + " complete", "Full live run");
+  $("#walkthroughStage").scrollIntoView({behavior:"smooth",block:"start"});
+  if (autoAdvance && !walkthroughPaused) narrateWalkthroughStep(step, token);
+  else setVoiceStatus("Walkthrough paused on " + step.domain + ".", "ready");
+}
+
+function finishWalkthrough() {
+  if (!walkthroughData) return;
+  stopWalkthroughVoice();
+  walkthroughIndex = walkthroughData.walkthrough.steps.length;
+  const stage = $("#walkthroughStage");
+  stage.classList.add("complete");
+  $("#walkthroughCount").textContent = "7 / 7 · COMPLETE";
+  $("#walkthroughProgressBar").style.width = "100%";
+  $("#walkthroughPhase").textContent = "COMPLETE";
+  $("#walkthroughDomain").textContent = "GUARDIAN";
+  $("#walkthroughStepTitle").textContent = "The whole launch day is coordinated";
+  $("#walkthroughNarration").textContent = walkthroughData.walkthrough.summary;
+  $("#walkthroughSignal").textContent = "One founder launch-day conflict";
+  $("#walkthroughReceived").textContent = "Seven relevant portal agents · six necessary exchanges";
+  $("#walkthroughGuardian").textContent = "Advice and preparations are complete. The user remains in control.";
+  $("#walkthroughPermission").textContent = walkthroughData.plan.coordination.decision;
+  $("#walkthroughNext").disabled = true;
+  $("#walkthroughNext").textContent = "Run complete ✓";
+  $("#walkthroughPause").disabled = true;
+  updateWalkthroughTimeline(0, true);
+  renderPlan(walkthroughData.plan, []);
+  setVoiceStatus("Full Guardian run complete. Approval decisions are ready below.", "ready");
+  addLog("Seven-portal live run completed; external actions remain permission-gated", "Guardian");
+  narrateWalkthroughFinal();
+}
+
+async function startFullWalkthrough() {
+  if (!experience.classList.contains("ready")) {
+    pendingWalkthroughLaunch = true;
+    awaken();
+    narrateCinematicIntro();
+    return;
+  }
+  const launchButtons = [$("#scenarioDemoButton"), $("#fullDemoButton")];
+  launchButtons.forEach(function (button) { button.disabled = true; button.classList.add("running"); });
+  setVoiceStatus("Guardian is loading the complete seven-portal run…", "thinking");
+  try {
+    const response = await fetch("/api/walkthrough", {method:"POST"});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Full walkthrough could not start");
+    walkthroughData = data;
+    walkthroughPaused = false;
+    $("#walkthroughPause").textContent = "Pause";
+    $("#walkthroughPause").setAttribute("aria-pressed", "false");
+    saveHubState(data.statePatch || {});
+    renderWalkthroughPortals();
+    $("#results").hidden = true;
+    showWalkthroughStep(0, true);
+  } catch (error) {
+    toast(error.message);
+    setVoiceStatus("The full run could not start. Try again.", "error");
+  } finally {
+    launchButtons.forEach(function (button) { button.disabled = false; button.classList.remove("running"); });
+  }
+}
+
+$("#scenarioDemoButton").addEventListener("click", startFullWalkthrough);
+$("#fullDemoButton").addEventListener("click", startFullWalkthrough);
+$("#walkthroughBack").addEventListener("click", function () {
+  walkthroughPaused = true;
+  $("#walkthroughPause").textContent = "Continue";
+  $("#walkthroughPause").setAttribute("aria-pressed", "true");
+  showWalkthroughStep(Math.max(0, walkthroughIndex - 1), false);
+});
+$("#walkthroughNext").addEventListener("click", function () {
+  walkthroughPaused = true;
+  $("#walkthroughPause").textContent = "Continue";
+  $("#walkthroughPause").setAttribute("aria-pressed", "true");
+  showWalkthroughStep(walkthroughIndex + 1, false);
+});
+$("#walkthroughPause").addEventListener("click", function () {
+  walkthroughPaused = !walkthroughPaused;
+  this.textContent = walkthroughPaused ? "Continue" : "Pause";
+  this.setAttribute("aria-pressed", String(walkthroughPaused));
+  if (walkthroughPaused) stopWalkthroughVoice();
+  else showWalkthroughStep(Math.min(walkthroughIndex, walkthroughData.walkthrough.steps.length - 1), true);
+});
+$("#walkthroughRestart").addEventListener("click", function () {
+  walkthroughPaused = false;
+  $("#walkthroughPause").textContent = "Pause";
+  $("#walkthroughPause").setAttribute("aria-pressed", "false");
+  showWalkthroughStep(0, true);
+});
+
 $("#workspaceClose").addEventListener("click", function () {
+  if (walkthroughData && walkthroughIndex >= 0 && walkthroughIndex < walkthroughData.walkthrough.steps.length) {
+    walkthroughPaused = true;
+    $("#walkthroughPause").textContent = "Continue";
+    $("#walkthroughPause").setAttribute("aria-pressed", "true");
+    stopWalkthroughVoice();
+  }
   $("#portalWorkspace").classList.remove("open");
   $("#portalWorkspace").setAttribute("aria-hidden", "true");
 });
@@ -224,12 +514,32 @@ $("#commandForm").addEventListener("submit", async function (event) {
 function renderPlan(plan, sources) {
   $("#resultSummary").textContent = plan.summary;
   $("#activeDomains").innerHTML = plan.domains.map(function (domain) { return "<span>" + esc(domain) + "</span>"; }).join("");
+  renderCoordination(plan.coordination, plan.domains);
   renderTasks("#nowTasks", plan.now);
   renderTasks("#todayTasks", plan.today);
   renderTasks("#weekTasks", plan.week);
   renderSources(sources || []);
   $("#results").hidden = false;
   $("#results").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function renderCoordination(coordination, domains) {
+  const trace = coordination || {
+    detected:"Context detected from the current request.",
+    agents:domains,
+    exchanges:[],
+    decision:"Advice prepared; permission is required before external action."
+  };
+  portalElements.forEach(function (element) {
+    element.classList.toggle("coordinated", trace.agents.includes(element.dataset.domain));
+  });
+  $("#coordinationDecision").textContent = trace.decision;
+  $("#coordinationAgents").innerHTML = '<div class="detected-signal"><span>DETECTED</span><b>' + esc(trace.detected) + '</b></div>' + trace.agents.map(function (agent) {
+    return '<div class="agent-chip"><span>ACTIVE</span><b>' + esc(agent) + ' agent</b></div>';
+  }).join("");
+  $("#coordinationExchanges").innerHTML = trace.exchanges.length ? trace.exchanges.map(function (exchange) {
+    return '<li><b>' + esc(exchange.from) + '</b><span>→ ' + esc(exchange.signal) + ' →</span><b>' + esc(exchange.to) + '</b></li>';
+  }).join("") : '<li class="no-exchange"><b>' + esc(trace.agents[0] || "Guardian") + '</b><span>No unrelated portal was activated.</span></li>';
 }
 
 function renderSources(sources) {
@@ -443,7 +753,7 @@ function speakPlan(plan, mode, sourceCount) {
   const firstNow = plan.now && plan.now[0] ? "First: " + plan.now[0].title + ". " + plan.now[0].detail : "";
   const safety = plan.sensitive ? " I found a sensitive action and paused it for your approval." : "";
   const evidence = sourceCount ? " I checked live sources; the links are shown with your plan." : "";
-  const introduction = mode === "openai" ? "Your GPT-5.6 plan is ready. " : "Your deterministic demo plan is ready. ";
+  const introduction = mode === "openai" ? "Your GPT-5.6 plan is ready. " : mode === "scenario" ? "Guardian coordination complete. " : "Your deterministic demo plan is ready. ";
   const utterance = new SpeechSynthesisUtterance(introduction + plan.summary + ". " + firstNow + safety + evidence);
   utterance.lang = "en-CA";
   utterance.rate = 0.95;

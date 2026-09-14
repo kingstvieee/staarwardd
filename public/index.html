@@ -4,10 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#02050d">
-  <meta name="description" content="StaarWardd — the impossible, beautifully handled across seven portals of life.">
-  <title>StaarWardd — The Whole-Life AI</title>
+  <meta name="description" content="StaarWardd - the impossible, beautifully handled across seven portals of life.">
+  <title>StaarWardd - The Whole-Life AI</title>
   <link rel="preload" href="/staarwardd-guardian-toronto-v9.png" as="image" type="image/png">
+  <link rel="preload" href="/staarwardd-summoning-bubble-v9.png" as="image" type="image/png">
+  <link rel="preload" href="/staarwardd-summoning-sword-v9.png" as="image" type="image/png">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/cinematic-patch.css?v=flight-restore-1">
   <link rel="stylesheet" href="/product-foundation.css">
 </head>
 <body>
@@ -16,18 +19,121 @@
     <p class="sr-only">StaarWardd is a cinematic whole-life assistant with seven interactive portals.</p>
     <div class="scene" id="scene">
       <div class="guardian-gate" aria-hidden="true"><span class="gate-ring gate-ring-one"></span><span class="gate-ring gate-ring-two"></span><span class="gate-core"></span><i class="gate-lightning gate-lightning-a"></i><i class="gate-lightning gate-lightning-b"></i><i class="gate-lightning gate-lightning-c"></i></div>
-      <div class="cinematic-stage" aria-hidden="true"><img class="stage-base guardian-flight-still" src="/staarwardd-guardian-toronto-v9.png" alt="" decoding="sync" fetchpriority="high"><img class="summoning-sword legacy-summon-prop" src="/staarwardd-summoning-sword-v9.png" alt="" decoding="async"><img class="summoning-bubble legacy-summon-prop" src="/staarwardd-summoning-bubble-v9.png" alt="" decoding="async"></div>
-      <div class="cinematic-brand" aria-hidden="true"><p>THE WHOLE-LIFE AI</p><div><span>STAAR</span><strong>WARDD</strong></div><small>STEP INTO YOUR WORLD</small></div>
+      <div class="cinematic-stage" aria-hidden="true">
+        <img class="stage-base guardian-flight-still" src="/staarwardd-guardian-toronto-v9.png" alt="" decoding="sync" fetchpriority="high">
+        <img class="summoning-sword legacy-summon-prop" src="/staarwardd-summoning-sword-v9.png" alt="" decoding="async">
+        <img class="summoning-bubble legacy-summon-prop" src="/staarwardd-summoning-bubble-v9.png" alt="" decoding="async">
+      </div>
+      <div class="cinematic-brand" aria-hidden="true">
+        <p>THE WHOLE-LIFE AI</p>
+        <div><span>STAAR</span><strong>WARDD</strong></div>
+        <small>STEP INTO YOUR WORLD</small>
+      </div>
       <div class="portal-field" id="portalField" aria-label="StaarWardd portals"></div>
-      <div class="maple-finale" aria-hidden="true"><span class="maple-sigil"><img src="/staarwardd-maple-sigil-v7.webp" alt="" decoding="async"></span><i class="shield-shock"></i></div><div class="scene-shade" aria-hidden="true"></div>
+      <div class="maple-finale" aria-hidden="true">
+        <span class="maple-sigil"><img src="/staarwardd-maple-sigil-v7.webp" alt="" decoding="async"></span>
+        <i class="shield-shock"></i>
+      </div>
+      <div class="scene-shade" aria-hidden="true"></div>
     </div>
-    <div class="opening" id="opening"><img class="starward-mark" src="/starward-mark.svg" alt=""><p>TORONTO · THE WHOLE-LIFE AI</p><h1>STAAR<span>WARDD</span></h1><div class="opening-rule"><i></i><b>✦</b><i></i></div><h2>The impossible. <em>Beautifully handled.</em></h2><button class="awaken" id="awakenButton"><span>Begin the awakening</span><b>✦</b></button><small>Sound begins on click · a cinematic flight into your world</small></div>
-    <div class="portal-ready" id="portalReady" aria-live="polite"><p>YOUR LIFE DOMAINS ARE ONLINE</p><h2>Where should the Guardian focus?</h2></div><p class="sr-only" id="portalAnnouncer" aria-live="assertive" aria-atomic="true"></p>
-    <nav class="experience-controls" aria-label="Experience controls"><button id="soundToggle" aria-pressed="true" title="Toggle sound">Sound <b>On</b></button><button id="motionToggle" aria-pressed="true" title="Toggle visual effects">FX <b>On</b></button><button id="talkButton" class="talk-button" aria-pressed="false" title="Speak to StaarWardd"><span aria-hidden="true">●</span> Talk</button><button id="replayButton" hidden>Replay ✦</button><button id="logToggle" aria-expanded="false">Log <b id="logCount">0</b></button></nav>
-    <section class="portal-workspace" id="portalWorkspace" aria-hidden="true" aria-labelledby="workspaceTitle"><header><div><p id="workspaceEyebrow">PORTAL</p><h2 id="workspaceTitle">Your world</h2><span id="workspacePromise"></span></div><button id="workspaceClose" aria-label="Close portal">×</button></header><div class="workspace-body"><form class="command-form" id="commandForm"><label for="command">What should the Guardian coordinate?</label><div class="command-row"><textarea id="command" rows="2" required placeholder="Tell the Guardian what is happening. It can connect the parts of your life that affect each other…"></textarea><button type="submit">Coordinate <b>→</b></button></div><div class="voice-status" id="voiceStatus" role="status" aria-live="polite"><span aria-hidden="true">◉</span> Press Talk, then speak naturally. Edge or Chrome recommended.</div><div class="quick-prompts" id="quickPrompts"></div><div class="portal-capabilities" id="portalCapabilities" aria-label="Specialist portal tools"></div></form><div class="plan" id="results" hidden aria-live="polite"><div class="plan-summary"><p>GUARDIAN BRIEFING</p><h3 id="resultSummary"></h3><div id="activeDomains"></div></div><aside class="source-list" id="sourceList" hidden aria-label="Sources"><p>LIVE SOURCES</p><div id="sourceLinks"></div></aside><div class="horizons"><article><header><b>NOW</b><span>Make momentum</span></header><div id="nowTasks"></div></article><article><header><b>TODAY</b><span>Shape the day</span></header><div id="todayTasks"></div></article><article><header><b>THIS WEEK</b><span>Protect what matters</span></header><div id="weekTasks"></div></article></div></div></div></section>
+    <div class="opening" id="opening">
+      <img class="starward-mark" src="/starward-mark.svg" alt="">
+      <p>TORONTO - THE WHOLE-LIFE AI</p>
+      <h1>STAAR<span>WARDD</span></h1>
+      <div class="opening-rule"><i></i><b>✦</b><i></i></div>
+      <h2>The impossible. <em>Beautifully handled.</em></h2>
+      <button class="awaken" id="awakenButton"><span>Begin the awakening</span><b>✦</b></button>
+      <small>Sound begins on click - a cinematic flight into your world</small>
+    </div>
+    <div class="portal-ready" id="portalReady" aria-live="polite"><p>THE PORTALS ARE OPEN</p><h2>Choose your world</h2></div>
+    <p class="sr-only" id="portalAnnouncer" aria-live="assertive" aria-atomic="true"></p>
+    <nav class="experience-controls" aria-label="Experience controls">
+      <button id="soundToggle" aria-pressed="true" title="Toggle sound">Sound <b>On</b></button>
+      <button id="motionToggle" aria-pressed="true" title="Toggle visual effects">FX <b>On</b></button>
+      <button id="talkButton" class="talk-button" aria-pressed="false" title="Speak to StaarWardd"><span aria-hidden="true">●</span> Talk</button>
+      <button id="fullDemoButton" class="full-demo-control" title="Run the complete seven-portal experience">Full run <b>▶</b></button>
+      <button id="replayButton" hidden>Replay ✦</button>
+      <button id="logToggle" aria-expanded="false">Log <b id="logCount">0</b></button>
+    </nav>
+    <section class="portal-workspace" id="portalWorkspace" aria-hidden="true" aria-labelledby="workspaceTitle">
+      <header><div><p id="workspaceEyebrow">PORTAL</p><h2 id="workspaceTitle">Your world</h2><span id="workspacePromise"></span></div><button id="workspaceClose" aria-label="Close portal">×</button></header>
+      <div class="workspace-body">
+        <section class="portal-world" id="portalWorld" aria-labelledby="worldTitle">
+          <div class="world-environment" id="worldEnvironment" aria-hidden="true"></div>
+          <div class="world-copy">
+            <p id="worldKicker">LIVE ENVIRONMENT</p>
+            <h3 id="worldTitle">Your world is ready</h3>
+            <span id="worldDescription"></span>
+          </div>
+          <div class="world-status" id="worldStatus" aria-label="Current portal state"></div>
+          <div class="shared-state" id="sharedState" aria-live="polite" hidden></div>
+          <div class="world-zones" id="worldZones" aria-label="Interactive areas"></div>
+          <button class="world-feature" id="worldFeature" type="button" hidden></button>
+          <aside class="guardian-presence" aria-label="Guardian orchestration">
+            <span class="guardian-core" aria-hidden="true">✦</span>
+            <div><p>GUARDIAN IS PRESENT</p><b id="guardianState">Watching context - with your permission</b></div>
+          </aside>
+        </section>
+        <section class="orchestration-strip" aria-label="How Guardian coordinates your life">
+          <div><span>1</span><b>Detects context</b></div><i>→</i>
+          <div><span>2</span><b>Activates relevant agents</b></div><i>→</i>
+          <div><span>3</span><b>Portals exchange signals</b></div><i>→</i>
+          <div><span>4</span><b>Prepares or acts by permission</b></div>
+        </section>
+        <button class="scenario-demo" id="scenarioDemoButton" type="button"><span>FULL LIVE GUARDIAN RUN</span><b>Experience all seven portals working together</b><i>Narrated · paced · permission-controlled →</i></button>
+        <section class="walkthrough-stage" id="walkthroughStage" hidden aria-live="polite" aria-label="Full Guardian walkthrough">
+          <header class="walkthrough-header">
+            <div><p>GUARDIAN LIVE RUN</p><h3 id="walkthroughTitle">One signal. Seven relevant worlds.</h3></div>
+            <div class="walkthrough-progress"><span id="walkthroughCount">1 / 7</span><i><b id="walkthroughProgressBar"></b></i></div>
+          </header>
+          <ol class="walkthrough-portals" id="walkthroughPortals" aria-label="Walkthrough portals"></ol>
+          <article class="walkthrough-scene" id="walkthroughScene">
+            <div class="walkthrough-phase"><span id="walkthroughPhase">DETECT</span><b id="walkthroughDomain">WORK AGENT</b></div>
+            <h3 id="walkthroughStepTitle">The launch day collision appears</h3>
+            <p class="walkthrough-narration" id="walkthroughNarration"></p>
+            <div class="walkthrough-evidence">
+              <div><span>SIGNAL</span><b id="walkthroughSignal"></b></div>
+              <div><span>PORTAL RECEIVES</span><b id="walkthroughReceived"></b></div>
+              <div><span>GUARDIAN</span><b id="walkthroughGuardian"></b></div>
+              <div class="permission"><span>PERMISSION STATE</span><b id="walkthroughPermission"></b></div>
+            </div>
+          </article>
+          <footer class="walkthrough-controls">
+            <button id="walkthroughBack" type="button">← Back</button>
+            <button id="walkthroughPause" type="button" aria-pressed="false">Pause</button>
+            <button id="walkthroughNext" type="button">Next portal →</button>
+            <button id="walkthroughRestart" type="button">Restart</button>
+          </footer>
+        </section>
+        <form class="command-form" id="commandForm">
+          <label for="command">Speak to Guardian inside this world</label>
+          <div class="command-row"><textarea id="command" rows="2" required placeholder="Speak naturally. Include everything on your mind..."></textarea><button type="submit">Sync <b>→</b></button></div>
+          <div class="voice-status" id="voiceStatus" role="status" aria-live="polite"><span aria-hidden="true">◉</span> Press Talk, then speak naturally. Edge or Chrome recommended.</div>
+          <div class="quick-prompts" id="quickPrompts"></div>
+          <div class="portal-capabilities" id="portalCapabilities" aria-label="Specialist portal tools"></div>
+        </form>
+        <div class="plan" id="results" hidden aria-live="polite">
+          <div class="plan-summary"><p>YOUR StaarWardd</p><h3 id="resultSummary"></h3><div id="activeDomains"></div></div>
+          <section class="coordination-trace" id="coordinationTrace" aria-label="Guardian coordination trace">
+            <header><p>GUARDIAN COORDINATION</p><span id="coordinationDecision"></span></header>
+            <div class="coordination-agents" id="coordinationAgents"></div>
+            <ol id="coordinationExchanges"></ol>
+          </section>
+          <aside class="source-list" id="sourceList" hidden aria-label="Sources"><p>LIVE SOURCES</p><div id="sourceLinks"></div></aside>
+          <div class="horizons">
+            <article><header><b>NOW</b><span>Make momentum</span></header><div id="nowTasks"></div></article>
+            <article><header><b>TODAY</b><span>Shape the day</span></header><div id="todayTasks"></div></article>
+            <article><header><b>THIS WEEK</b><span>Protect what matters</span></header><div id="weekTasks"></div></article>
+          </div>
+        </div>
+      </div>
+    </section>
     <aside class="action-log" id="actionLog" aria-hidden="true"><header><div><p>TRANSPARENT BY DESIGN</p><h2>Action log</h2></div><button id="logClose" aria-label="Close log">×</button></header><ol id="logList"></ol><button id="clearLog">Clear log</button></aside>
   </main>
-  <dialog id="approvalDialog"><form method="dialog"><p>HUMAN APPROVAL REQUIRED</p><h2>The Guardian pauses here.</h2><div id="approvalText"></div><aside><b>No silent actions.</b><span>This prototype simulates approval and never contacts anyone, spends money, books, publishes, or deletes.</span></aside><footer><button value="cancel">Not now</button><button value="approve">Approve simulation</button></footer></form></dialog><div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="/entry-context.js"></script><script src="/guardian-context.js"></script><script type="module" src="/app.js?v=guardian-context-1"></script>
+  <dialog id="approvalDialog"><form method="dialog"><p>HUMAN APPROVAL REQUIRED</p><h2>StaarWardd pauses here.</h2><div id="approvalText"></div><aside><b>No silent actions.</b><span>This prototype simulates approval and never contacts anyone, spends money, books, publishes, or deletes.</span></aside><footer><button value="cancel">Not now</button><button value="approve">Approve simulation</button></footer></form></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/entry-context.js"></script>
+  <script src="/guardian-context.js"></script>
+  <script type="module" src="/app.js?v=full-live-run-10"></script>
 </body>
 </html>

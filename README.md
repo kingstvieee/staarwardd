@@ -56,6 +56,9 @@ Microphone permission is controlled by the browser. Typing remains fully functio
 
 - Full-screen Toronto and CN Tower cinematic opening with a clean identity-consistent guardian in a forward-flight composition, seven sword-cast magic-bubble portal summons, unique procedural audio signatures, a visible StaarWardd title, and an original maple-energy finale.
 - Seven visible, keyboard-accessible portals.
+- One continuous, narrated launch-day walkthrough that makes all seven portals genuinely relevant and moves through Work, Creativity, Community, Style, Relationships, Wellbeing, and Home.
+- Viewer-controlled walkthrough pacing with Pause, Continue, Back, Next portal, direct step selection, and Restart.
+- Every walkthrough stage exposes its incoming signal, portal exchange, Guardian preparation, and permission state before the final coordinated plan.
 - All seven portals are fully interactive and produce distinct specialist plans.
 - Relationships includes a connection compass, boundary rehearsal, and approval-aware message studio.
 - Community includes a local impact map, energy budget, and outreach planner.
@@ -167,3 +170,4 @@ See CODEX_START_HERE.md, TROUBLESHOOTING.md, and DEMO_SCENARIOS.md.
 ## Working-name clearance
 
 The exact spelling StaarWardd produced no meaningful exact-match results in preliminary open-web, handle, AI-app, or public trademark-index searches performed on July 19, 2026. That is useful evidence of distinctiveness, not a guarantee of worldwide availability or legal ownership. Before commercial launch, run formal Canadian and international trademark clearance, secure the domain and key social handles, and file in the relevant software and AI service classes.
+

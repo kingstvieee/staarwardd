@@ -14,35 +14,203 @@ export function demoPlan(input) {
   const lower = q.toLowerCase();
   const domains = [];
   const find = (words, domain) => words.some(w => lower.includes(w)) && domains.push(domain);
-  find(['work','meeting','email','deadline','project','presentation','client','focus'], 'Work');
-  find(['creative','creativity','write','paint','music','idea','design'], 'Creativity');
-  find(['home','grocer','meal','clean','repair','laundry','kitchen'], 'Home');
+  find(['work','meeting','email','deadline','project','presentation','client','focus','schedule','conflict','communication'], 'Work');
+  find(['creative','creativity','write','paint','music','idea','design','media','content','diggitstaar','publish'], 'Creativity');
+  find(['home','grocer','meal','clean','repair','laundry','kitchen','device','routine','security','arrival','departure','staar access','household'], 'Home');
   find(['wellbeing','wellness','health','walk','sleep','stress','exercise','meditat'], 'Wellbeing');
-  find(['relationship','partner','friend','family','date'], 'Relationships');
-  find(['community','volunteer','neighbour','event'], 'Community');
-  find(['style','outfit','wardrobe','wear'], 'Style');
+  find(['relationship','partner','friend','family','date','commitment','memory'], 'Relationships');
+  find(['community','volunteer','neighbour','event','accessible','accessibility','local','place'], 'Community');
+  find(['style','outfit','wardrobe','wear','fitting','mirror','rising staardform'], 'Style');
   if (!domains.length) domains.push('Work', 'Wellbeing');
   const unique = [...new Set(domains)];
-  const primary = unique[0];
   const sensitive = /send|email|message|contact|invite|book|buy|purchase|cancel|delete|share|publish|pay|order|post|register|rsvp/.test(lower);
   const label = q || 'Create a balanced plan for my day';
   const now = unique.slice(0, 2).map((domain, index) => portalTask(domain, 'now', label, sensitive && index === 0));
   const today = unique.map((domain, index) => portalTask(domain, 'today', label, sensitive && index === 0));
-  const week = [
-    portalTask(primary, 'week', label, false),
-    ...(primary === 'Wellbeing' ? [] : [portalTask('Wellbeing', 'week', label, false)])
+  const week = unique.map(domain => portalTask(domain, 'week', label, false));
+  const coordination = buildCoordination(unique, label, sensitive);
+  return { id: `demo-${hash(lower)}`, summary: `A calm, coordinated plan across ${unique.join(' + ')}.`, domains: unique, sensitive, coordination, now, today, week };
+}
+
+function buildCoordination(domains, request, sensitive) {
+  const signalNames = {
+    Work:'schedule and priority constraints',Creativity:'production requirements',Home:'household and arrival state',Wellbeing:'permission-scoped routine context',Relationships:'people and commitment context',Community:'location and accessibility needs',Style:'occasion, wardrobe and fitting needs'
+  };
+  const exchanges = domains.slice(1).map((domain, index) => ({
+    from:domains[index],to:domain,signal:signalNames[domains[index]]
+  }));
+  return {
+    detected:`Relevant context: ${String(request).replace(/^\w+ context:\s*/i,'').slice(0,180)}`,
+    agents:domains,
+    exchanges,
+    decision:sensitive ? 'Prepared only — explicit approval required before external action.' : 'Advice and preparation ready — no external action taken.'
+  };
+}
+
+export function scenarioPlan() {
+  const domains = ['Work','Style','Relationships','Home'];
+  const plan = {
+    id:'scenario-founder-evening',
+    summary:'Guardian found a four-way evening conflict and prepared a coordinated recovery plan without contacting anyone or changing any service.',
+    domains,
+    sensitive:true,
+    coordination:{
+      detected:'The investor meeting may run 45 minutes late, overlapping the 6:30 PM fitting, the 8:00 PM anniversary dinner, gift delivery, and the home arrival routine.',
+      agents:domains,
+      exchanges:[
+        {from:'Work',to:'Style',signal:'meeting delay and revised fitting window'},
+        {from:'Style',to:'Relationships',signal:'outfit-ready time and dinner travel buffer'},
+        {from:'Relationships',to:'Home',signal:'revised arrival time and delivery watch window'}
+      ],
+      decision:'Four adjustments prepared — explicit approval required before messages or schedule changes.'
+    },
+    now:[
+      {domain:'Work',title:'Protect the investor meeting',detail:'Keep the pitch on track and reserve a firm close time so downstream commitments can be recalculated.',time:'Now · 2 min',action:'Lock meeting boundary',sensitive:false},
+      {domain:'Style',title:'Prepare stylist timing message',detail:'Draft a request to shift the fitting and ask the stylist to prepare the selected look before arrival.',time:'Now · approval',action:'Review stylist message',sensitive:true},
+      {domain:'Relationships',title:'Protect the anniversary promise',detail:'Hold the dinner reservation and prepare a warm update only if the revised travel buffer becomes unsafe.',time:'Now · approval',action:'Review dinner update',sensitive:true}
+    ],
+    today:[
+      {domain:'Home',title:'Delay the arrival routine',detail:'Prepare lights, entry, security and temperature to activate at the revised arrival time; no device state has been changed.',time:'Today · approval',action:'Review home adjustment',sensitive:true},
+      {domain:'Relationships',title:'Watch the gift delivery window',detail:'Keep the delivery status visible and prepare a backup handoff plan without changing the order.',time:'Before dinner',action:'Track delivery',sensitive:false},
+      {domain:'Style',title:'Stage the complete look',detail:'Place the approved outfit, shoes, accessories and grooming sequence into one fitting-room flow.',time:'Before departure',action:'Open fitting flow',sensitive:false}
+    ],
+    week:[
+      {domain:'Work',title:'Prevent the next collision',detail:'Add a protected transition window between high-stakes work and personal commitments.',time:'This week',action:'Build buffer rule',sensitive:false},
+      {domain:'Home',title:'Save an arrival exception',detail:'Prepare a reusable late-arrival routine that always asks before security or device changes.',time:'This week',action:'Prepare exception',sensitive:false}
+    ]
+  };
+  return {
+    plan,
+    statePatch:{
+      scenario:'founder-evening',updatedAt:'demo-sequence',
+      work:{meeting:'Investor pitch',status:'running-late',protectedClose:'6:20 PM'},
+      style:{fitting:'RISING STAARDFORM look',status:'shift-prepared',revisedWindow:'6:40 PM'},
+      relationships:{commitment:'Anniversary dinner',status:'protected',reservation:'8:00 PM',giftDelivery:'watching'},
+      home:{security:'secure',arrivalRoutine:'prepared-delay',revisedArrival:'After 7:00 PM'}
+    }
+  };
+}
+
+export function fullWalkthroughPlan() {
+  const domains = ['Work','Creativity','Community','Style','Relationships','Wellbeing','Home'];
+  const steps = [
+    {
+      domain:'Work',phase:'DETECT',title:'The launch day collision appears',
+      signal:'Investor pitch running 45 minutes late',
+      received:'Schedule, project, meeting and communication context',
+      guardian:'Guardian protects a 6:20 PM close and recalculates every downstream commitment.',
+      permission:'Advises now — no calendar or message changed.',
+      narration:'Work detects the first signal: the investor pitch is running forty-five minutes late. Guardian protects a firm close and activates the other portal agents affected by the launch day.',
+      state:{meeting:'Investor pitch',conflict:'45-minute delay detected',protectedClose:'6:20 PM'}
+    },
+    {
+      domain:'Creativity',phase:'ACTIVATE',title:'DIGGITSTAAR protects the release',
+      signal:'Revised pitch close and approval window',
+      received:'Work → launch timing and investor priorities',
+      guardian:'DIGGITSTAAR stages the hero media, caption package and final review in one production lane.',
+      permission:'Prepared only — publishing requires approval.',
+      narration:'Creativity receives the revised timing. Inside DIGGITSTAAR, the launch film, design system and publishing package are staged for review, but nothing is released without approval.',
+      state:{studio:'DIGGITSTAAR',release:'Launch package staged',publishGate:'Approval required'}
+    },
+    {
+      domain:'Community',phase:'EXCHANGE',title:'The Toronto experience stays accessible',
+      signal:'Final media window and revised arrival estimate',
+      received:'Creativity → release readiness · Work → travel window',
+      guardian:'Guardian keeps the local showcase, venue access needs and check-in timing aligned.',
+      permission:'Shortlist prepared — no registration or booking made.',
+      narration:'Community connects the digital launch to the real Toronto experience. Venue access, check-in timing and the local opportunity remain visible without booking or registering on the user’s behalf.',
+      state:{location:'Toronto showcase',accessibility:'Access filters on',checkIn:'Revised window prepared'}
+    },
+    {
+      domain:'Style',phase:'EXCHANGE',title:'RISING STAARDFORM enters the fitting room',
+      signal:'Venue context, pitch close and departure time',
+      received:'Community → event setting · Work → revised fitting window',
+      guardian:'Guardian Stylist stages the complete white, champagne and chrome founder look.',
+      permission:'Stylist message drafted — sending requires approval.',
+      narration:'Style opens as a real futuristic wardrobe. RISING STAARDFORM is built into the fitting experience while Guardian Stylist stages the complete founder look and drafts a timing update for approval.',
+      state:{fitting:'RISING STAARDFORM founder look',mirror:'Silhouette ready',stylistMessage:'Drafted'}
+    },
+    {
+      domain:'Relationships',phase:'EXCHANGE',title:'The promise stays human',
+      signal:'Outfit-ready time and dinner travel buffer',
+      received:'Style → departure readiness · Home → gift delivery watch',
+      guardian:'Guardian protects the 8:00 PM anniversary dinner and prepares a warm update only if needed.',
+      permission:'Approval required before contacting anyone.',
+      narration:'Relationships opens the actual commitment, not a generic question card. Guardian protects the anniversary dinner, remembers the gift delivery and prepares a human message without sending it.',
+      state:{commitment:'Anniversary dinner',reservation:'8:00 PM protected',message:'Prepared, not sent',gift:'Delivery watched'}
+    },
+    {
+      domain:'Wellbeing',phase:'ADVISE',title:'The plan makes room for the person',
+      signal:'Permission-scoped energy check-in',
+      received:'Work → intensity · Relationships → evening commitment',
+      guardian:'Guardian suggests water, food and a quiet transition buffer. This is coordination, not diagnosis.',
+      permission:'Private context used only for this walkthrough.',
+      narration:'Wellbeing uses only permitted context. Guardian suggests a practical reset and protects energy for the evening; it does not diagnose, label or replace professional care.',
+      state:{checkIn:'Permission granted for this run',reset:'Water, food, quiet transition',boundary:'No diagnosis'}
+    },
+    {
+      domain:'Home',phase:'PREPARE',title:'Home is ready when it becomes useful',
+      signal:'Revised departure, gift watch and arrival time',
+      received:'Relationships → delivery window · Wellbeing → quiet arrival preference',
+      guardian:'STAAR Access prepares entry, lighting, temperature and security as one late-arrival routine.',
+      permission:'Approval required before any device changes.',
+      narration:'Home appears only when arrival becomes relevant. STAAR Access combines security, lighting, temperature and accessibility into one prepared routine. No device has been changed without permission.',
+      state:{security:'Secure',arrivalRoutine:'Prepared, not executed',STAARAccess:'Ready',devices:'No changes made'}
+    }
   ];
-  return { id: `demo-${hash(lower)}`, summary: `A calm, coordinated plan across ${unique.join(' + ')}.`, domains: unique, sensitive, now, today, week };
+  const coordination = {
+    detected:'One delayed investor pitch affects the launch release, Toronto showcase, RISING STAARDFORM fitting, anniversary commitment, permitted wellbeing rhythm and home arrival.',
+    agents:domains,
+    exchanges:[
+      {from:'Work',to:'Creativity',signal:'revised approval and release window'},
+      {from:'Creativity',to:'Community',signal:'launch media readiness'},
+      {from:'Community',to:'Style',signal:'venue, access and arrival context'},
+      {from:'Style',to:'Relationships',signal:'outfit-ready time and travel buffer'},
+      {from:'Relationships',to:'Home',signal:'gift watch and revised arrival'},
+      {from:'Wellbeing',to:'Work',signal:'permission-scoped transition needs'}
+    ],
+    decision:'Advice and preparations are ready. Messages, publishing, bookings and device changes remain paused for approval.'
+  };
+  const plan = {
+    id:'scenario-full-live-run',
+    summary:'Guardian coordinated one launch day across all seven relevant portals while keeping every external action behind permission.',
+    domains,sensitive:true,coordination,
+    now:[
+      {domain:'Work',title:'Lock the pitch close',detail:'Protect the 6:20 PM boundary and show the revised cross-portal timing.',time:'Now · ready',action:'Mark boundary ready',sensitive:false},
+      {domain:'Creativity',title:'Review the DIGGITSTAAR release',detail:'Review the staged launch film, design and caption package before anything is published.',time:'Now · approval',action:'Review publish package',sensitive:true},
+      {domain:'Wellbeing',title:'Take the transition reset',detail:'Use water, food and a quiet buffer without interpreting the check-in as a diagnosis.',time:'Now · 15 min',action:'Begin reset',sensitive:false}
+    ],
+    today:[
+      {domain:'Community',title:'Confirm the accessible Toronto route',detail:'Review venue access and check-in timing before registration or travel.',time:'Before departure',action:'Review route',sensitive:false},
+      {domain:'Style',title:'Review the stylist update',detail:'Approve the drafted fitting-time message and complete the RISING STAARDFORM look.',time:'Before fitting · approval',action:'Review stylist message',sensitive:true},
+      {domain:'Relationships',title:'Protect the anniversary commitment',detail:'Keep dinner and the gift visible; approve a personal update only if the buffer becomes unsafe.',time:'Before dinner · approval',action:'Review personal update',sensitive:true},
+      {domain:'Home',title:'Approve the STAAR Access arrival routine',detail:'Review entry, security, lighting and temperature changes before any connected device acts.',time:'Before arrival · approval',action:'Review home routine',sensitive:true}
+    ],
+    week:[
+      {domain:'Work',title:'Save a cross-life buffer rule',detail:'Prepare a repeatable transition between high-stakes work and personal commitments.',time:'This week',action:'Save rule draft',sensitive:false},
+      {domain:'Creativity',title:'Keep the publishing gate',detail:'Preserve human review across future DIGGITSTAAR production workflows.',time:'This week',action:'Keep approval gate',sensitive:false},
+      {domain:'Home',title:'Keep arrival exceptions permissioned',detail:'STAAR Access should always ask before security or device changes.',time:'This week',action:'Keep permission rule',sensitive:false}
+    ]
+  };
+  const statePatch = steps.reduce((state, step) => {
+    state[step.domain.toLowerCase()] = step.state;
+    return state;
+  }, {scenario:'full-live-run',updatedAt:'walkthrough-sequence'});
+  return {
+    walkthrough:{id:'guardian-full-live-run',title:'One signal. Seven relevant worlds. One Guardian.',summary:plan.summary,domains,steps},
+    plan,
+    statePatch
+  };
 }
 
 const portalPlaybooks = {
-  Work:{now:['Choose the leverage point','Name the smallest useful deliverable and protect one uninterrupted 20-minute start.','Start focus'],today:['Triage the workday','Sort must-do, should-do, and later work; then finish the highest-value deliverable first.','Mark ready'],week:['Protect deep work','Reserve one 60-minute block for the work that changes the week.','Schedule block']},
-  Creativity:{now:['Capture the living idea','Write the idea in one sentence, choose its form, and make an intentionally rough first move.','Begin draft'],today:['Build a creative container','Set one constraint, one reference, and one finish line so inspiration can become form.','Save ritual'],week:['Complete one shareable version','Protect a focused making session and define what finished enough means.','Schedule studio time']},
-  Home:{now:['Create visible calm','Reset the one surface or room that will make the whole home feel lighter.','Start reset'],today:['Close the household loop','Sequence food, cleanup, laundry, and supplies so each task supports the next.','Add home rhythm'],week:['Prevent the next pile-up','Choose one repeatable 30-minute reset and assign it a realistic day.','Schedule reset']},
+  Work:{now:['Open the Guardian briefing','Bring schedule, projects, meetings and communications into one conflict scan before choosing the next move.','Open briefing'],today:['Resolve the cross-portal conflict','Protect the priority commitment and prepare updates wherever another portal is affected.','Prepare coordination'],week:['Stabilize the command centre','Reserve focus, meeting and follow-up windows around the work that changes the week.','Build command week']},
+  Creativity:{now:['Open the DIGGITSTAAR production lane','Choose the media format, intended audience and next concrete artifact before generating anything.','Enter studio'],today:['Move creation through review','Sequence concept, media, design, AI creation and human review into one production workflow.','Build pipeline'],week:['Prepare an approval-ready release','Complete one coherent version and keep publishing behind an explicit approval gate.','Prepare release']},
+  Home:{now:['Read the household state','Check relevant rooms, devices, security and arrival or departure state before proposing automation.','View home state'],today:['Coordinate the living environment','Prepare device routines, household needs and Guardian automation without changing anything outside permission.','Prepare routine'],week:['Strengthen STAAR Access','Review accessible controls, security exceptions and repeatable household automations.','Review STAAR Access']},
   Wellbeing:{now:['Regulate before optimizing','Take water, three slower breaths, and a brief movement break before the next demand.','Begin reset'],today:['Protect the energy floor','Pair focused effort with food, hydration, movement, and a realistic stop time.','Add recovery'],week:['Build recovery into the plan','Choose three realistic moments for movement, rest, or quiet.','Add rhythm']},
-  Relationships:{now:['Name the real connection need','Choose whether this moment needs listening, appreciation, repair, a boundary, or simple presence.','Open compass'],today:['Prepare a human message','Draft a warm, specific note in your voice; keep sending behind explicit approval.','Review message'],week:['Create a dependable connection ritual','Choose one person, one meaningful question, and one realistic time to reconnect.','Schedule check-in']},
-  Community:{now:['Choose your circle of impact','Match one local need with your available time, energy, skills, and access needs.','Open impact map'],today:['Shortlist a grounded contribution','Compare one event, one organization, and one neighbour-scale action before committing.','Build shortlist'],week:['Make belonging repeatable','Protect one sustainable contribution and leave recovery space around it.','Add community rhythm']},
-  Style:{now:['Build the outfit formula','Choose the occasion, silhouette, anchor piece, layer, and finishing detail using your existing wardrobe first.','Open outfit studio'],today:['Prepare the complete look','Lay out clothing, shoes, accessories, grooming, and a weather-aware backup.','Save look'],week:['Edit the wardrobe with intention','Create keep, tailor, repair, restyle, and release groups before considering a purchase.','Start wardrobe edit']}
+  Relationships:{now:['Open the person, not a prompt','Bring the relevant person, shared context, commitment and current communication need into view.','Open person context'],today:['Prepare a human communication','Draft in the user’s voice from real relationship context; keep sending behind explicit approval.','Review communication'],week:['Protect living commitments','Connect meaningful plans and memories to a realistic time without flattening the relationship into tasks.','Review commitments']},
+  Community:{now:['Open the real-world connection layer','Match Toronto places, events and opportunities to location, energy and accessibility needs.','Explore nearby'],today:['Compare accessible possibilities','Evaluate the practical fit of local discovery before travel, registration or commitment.','Build local shortlist'],week:['Extend belonging sustainably','Connect one local experience to a longer-term community path, with recovery and access considered.','Shape community path']},
+  Style:{now:['Step into the fitting room','Use the illuminated racks, mirror, occasion and real wardrobe context to build the silhouette.','Open fitting mirror'],today:['Complete the physical look','Coordinate garments, fit, shoes, accessories and grooming with Guardian Stylist interaction.','Save fitting'],week:['Develop the wardrobe world','Refine real wardrobe gaps and RISING STAARDFORM pieces without turning the portal into an advertisement.','Plan wardrobe']}
 };
 
 function portalTask(domain, horizon, request, requiresApproval) {
@@ -60,11 +228,20 @@ async function aiPlan(input) {
   const schema = {
     type:'object',
     additionalProperties:false,
-    required:['summary','domains','sensitive','now','today','week'],
+    required:['summary','domains','sensitive','coordination','now','today','week'],
     properties:{
       summary:{type:'string'},
       domains:{type:'array',items:{type:'string',enum:['Work','Creativity','Home','Wellbeing','Relationships','Community','Style']}},
       sensitive:{type:'boolean'},
+      coordination:{
+        type:'object',additionalProperties:false,required:['detected','agents','exchanges','decision'],
+        properties:{
+          detected:{type:'string'},
+          agents:{type:'array',items:{type:'string',enum:['Work','Creativity','Home','Wellbeing','Relationships','Community','Style']}},
+          exchanges:{type:'array',items:{type:'object',additionalProperties:false,required:['from','to','signal'],properties:{from:{type:'string'},to:{type:'string'},signal:{type:'string'}}}},
+          decision:{type:'string'}
+        }
+      },
       now:{type:'array',items:taskSchema()},
       today:{type:'array',items:taskSchema()},
       week:{type:'array',items:taskSchema()}
@@ -74,7 +251,11 @@ async function aiPlan(input) {
     model:process.env.OPENAI_MODEL || 'gpt-5.6',
     instructions:[
       'You are StaarWardd, an accurate and calm whole-life planning guardian.',
-      'Turn the request into a concise, realistic cross-domain plan.',
+      'Follow this orchestration rule: detect context, activate only relevant portal agents, exchange necessary information across those portals, then advise, prepare, or act only according to permission.',
+      'In coordination, agents must match domains exactly. Describe each necessary cross-portal exchange; return no exchanges for a single-domain request.',
+      'Do not force the user into a portal or expose an unrelated portal. Turn the request into a concise, realistic cross-domain plan.',
+      'Home includes STAAR Access, devices, routines, security, household state, arrival and departure intelligence. Creativity includes DIGGITSTAAR production. Style is a wardrobe and fitting environment integrating RISING STAARDFORM.',
+      'Wellbeing may coordinate permission-scoped context but must not diagnose or pretend to replace professional care.',
       'Use web search only when the answer depends on current or externally verifiable facts.',
       'Never guess current facts. If a fact cannot be verified, say so plainly in the summary or task detail.',
       'Flag external communication, purchases, deletion, bookings, payments, publishing, sharing, or account changes as sensitive.',
@@ -152,6 +333,8 @@ function taskSchema(){
 export const server = http.createServer(async (req,res)=>{
   try {
     if(req.method==='GET' && req.url==='/api/status') { const live=Boolean(process.env.OPENAI_API_KEY) && process.env.STAARWARDD_DEMO_ONLY !== '1' && process.env.STARWARD_DEMO_ONLY !== '1' && process.env.BLESSYNC_DEMO_ONLY !== '1'; return json(res,200,{mode:live?'openai':'demo',model:live?(process.env.OPENAI_MODEL||'gpt-5.6'):null,webSearch:live,voice:'browser',guardian:'cinematic-css'}); }
+    if(req.method==='POST' && req.url==='/api/walkthrough') { const result=fullWalkthroughPlan(); return json(res,200,{mode:'walkthrough',...result,sources:[],webSearched:false}); }
+    if(req.method==='POST' && req.url==='/api/scenario') { const result=scenarioPlan(); return json(res,200,{mode:'scenario',plan:result.plan,statePatch:result.statePatch,sources:[],webSearched:false}); }
     if(req.method==='POST' && req.url==='/api/plan') { const body=await bodyJson(req); const input=String(body.input||'').slice(0,2000); if(!input.trim()) return json(res,400,{error:'Please enter a request.'}); try { const result=await aiPlan(input); return json(res,200,result?{mode:'openai',plan:result.plan,sources:result.sources,webSearched:result.webSearched}:{mode:'demo',plan:demoPlan(input),sources:[],webSearched:false}); } catch(e){ return json(res,200,{mode:'demo-fallback',warning:e.message,plan:demoPlan(input),sources:[],webSearched:false}); } }
     if(req.method!=='GET' && req.method!=='HEAD') return json(res,405,{error:'Method not allowed'});
     const requestPath=req.url.split('?')[0];
@@ -183,6 +366,7 @@ export const server = http.createServer(async (req,res)=>{
 });
 function json(res,status,data){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));}
 function bodyJson(req){return new Promise((resolve,reject)=>{let body='';req.on('data',c=>{body+=c;if(body.length>1e6)reject(new Error('Body too large'));});req.on('end',()=>{try{resolve(JSON.parse(body||'{}'))}catch{reject(new Error('Invalid JSON'))}});req.on('error',reject);});}
+export default server;
 if(process.argv[1]===fileURLToPath(import.meta.url)) server.listen(port,'0.0.0.0',()=>console.log(`StaarWardd is ready at http://localhost:${port}`));
 
 
