@@ -425,6 +425,7 @@ function finishWalkthrough() {
 
 async function startFullWalkthrough() {
   if (!experience.classList.contains("ready")) {
+    if (pendingWalkthroughLaunch) return;
     pendingWalkthroughLaunch = true;
     awaken();
     narrateCinematicIntro();
@@ -469,11 +470,18 @@ $("#walkthroughNext").addEventListener("click", function () {
 });
 $("#walkthroughPause").addEventListener("click", function () {
   if (!walkthroughData) return;
-  walkthroughPaused = !walkthroughPaused;
-  this.textContent = walkthroughPaused ? "Continue" : "Pause";
-  this.setAttribute("aria-pressed", String(walkthroughPaused));
-  if (walkthroughPaused) stopWalkthroughVoice();
-  else showWalkthroughStep(Math.min(walkthroughIndex, walkthroughData.walkthrough.steps.length - 1), true);
+  if (!walkthroughPaused) {
+    walkthroughPaused = true;
+    this.textContent = "Continue";
+    this.setAttribute("aria-pressed", "true");
+    stopWalkthroughVoice();
+    return;
+  }
+  if (walkthroughIndex >= walkthroughData.walkthrough.steps.length) return;
+  walkthroughPaused = false;
+  this.textContent = "Pause";
+  this.setAttribute("aria-pressed", "false");
+  showWalkthroughStep(Math.min(walkthroughIndex, walkthroughData.walkthrough.steps.length - 1), true);
 });
 $("#walkthroughRestart").addEventListener("click", function () {
   walkthroughPaused = false;
