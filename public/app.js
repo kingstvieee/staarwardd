@@ -365,6 +365,11 @@ function showWalkthroughStep(index, autoAdvance) {
   stopWalkthroughVoice();
   const token = walkthroughRunId;
   const portalIndex = portals.findIndex(function (portal) { return portal.name === step.domain; });
+  if (portalIndex === -1) {
+    toast("Walkthrough data is out of sync. Please restart the full run.");
+    setVoiceStatus("The walkthrough data is invalid. Restart the full run.", "error");
+    return;
+  }
   openPortal(portals[portalIndex], portalIndex, {walkthrough:true});
   $("#walkthroughStage").hidden = false;
   $("#walkthroughStage").classList.remove("complete");
