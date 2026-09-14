@@ -47,8 +47,20 @@ function readHubState() {
 }
 
 function saveHubState(patch) {
-  hubState = Object.assign({}, hubState, patch);
+  const domainKeys = portals.map(function (portal) { return portal.name.toLowerCase(); });
+  const metadata = Object.fromEntries(Object.entries(hubState).filter(function (entry) {
+    return !domainKeys.includes(entry[0]);
+  }));
+  hubState = Object.assign({}, metadata, patch);
   localStorage.setItem("staarwardd-hub-state", JSON.stringify(hubState));
+}
+
+function formatStateValue(value) {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value == null) return "";
+  try { return JSON.stringify(value); }
+  catch (error) { return String(value); }
 }
 
 portals.forEach(function (portal, index) {
@@ -257,7 +269,7 @@ function renderSharedState(domain) {
   shared.hidden = false;
   world.classList.add("shared-state-visible");
   shared.innerHTML = '<p>SHARED LIVE STATE</p>' + Object.entries(state).map(function (entry) {
-    return '<div><span>' + esc(entry[0].replace(/([A-Z])/g, " $1")) + '</span><b>' + esc(entry[1]) + '</b></div>';
+    return '<div><span>' + esc(entry[0].replace(/([A-Z])/g, " $1")) + '</span><b>' + esc(formatStateValue(entry[1])) + '</b></div>';
   }).join("");
 }
 
@@ -542,6 +554,7 @@ function renderPlan(plan, sources) {
 }
 
 function renderCoordination(coordination, domains) {
+  $("#coordinationTrace").hidden = false;
   const trace = coordination || {
     detected:"Context detected from the current request.",
     agents:domains,
