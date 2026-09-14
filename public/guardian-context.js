@@ -5,12 +5,15 @@
     return window.STAAR_ENTRY_CONTEXT || {entry:"web",portal:null,zone:null,physical:false};
   }
 
-  function contextPrefix(context) {
-    const parts = [];
-    if (context.physical) parts.push("Physical entry: NFC");
-    if (context.zone) parts.push("Zone: " + context.zone);
-    if (context.portal) parts.push("Entry portal: " + context.portal);
-    return parts.length ? "[STAAR Hub context: " + parts.join("; ") + "] " : "";
+  function validatedContext(context) {
+    return {
+      entry: context && context.physical ? "nfc" : "web",
+      portal: context && typeof context.portal === "string" ? context.portal : null,
+      zone: context && typeof context.zone === "string"
+        ? context.zone.replace(/[^a-z0-9 _-]/gi, "").trim().slice(0, 64) || null
+        : null,
+      physical: !!(context && context.physical)
+    };
   }
 
   window.fetch = async function (input, init) {
@@ -18,11 +21,8 @@
     if (url === "/api/plan" && init && typeof init.body === "string") {
       try {
         const payload = JSON.parse(init.body);
-        const context = entryContext();
+        const context = validatedContext(entryContext());
         payload.entryContext = context;
-        if (typeof payload.input === "string") {
-          payload.input = contextPrefix(context) + payload.input;
-        }
         init = Object.assign({}, init, {body:JSON.stringify(payload)});
       } catch (error) {
         // Preserve the original request if the payload cannot be parsed.
@@ -50,8 +50,7 @@
       const observer = new MutationObserver(function () {
         if (!workspace.classList.contains("open")) return;
         const zone = context.zone ? context.zone.replace(/[-_]+/g, " ") : "this space";
-        if (!promise.dataset.basePromise) promise.dataset.basePromise = promise.textContent;
-        const base = promise.dataset.basePromise || promise.textContent;
+        const base = (promise.textContent || "").split(" · Physical context:")[0];
         if (!promise.textContent.includes("Physical context")) {
           promise.textContent = base + " · Physical context: " + zone;
         }

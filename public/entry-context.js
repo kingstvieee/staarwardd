@@ -38,7 +38,17 @@
     const portalLabel = portal ? portal.toUpperCase() + " PORTAL" : "STAAR HUB";
     const zoneLabel = zone ? zone.replace(/[-_]+/g, " ").toUpperCase() : "PHYSICAL SPACE";
 
-    badge.innerHTML = "<span>⌁</span><div><b>" + portalLabel + " CONNECTED</b><small>NFC · " + zoneLabel + "</small></div>";
+    const icon = document.createElement("span");
+    icon.textContent = "⌁";
+    const textWrap = document.createElement("div");
+    const title = document.createElement("b");
+    title.textContent = portalLabel + " CONNECTED";
+    const detail = document.createElement("small");
+    detail.textContent = "NFC · " + zoneLabel;
+    textWrap.appendChild(title);
+    textWrap.appendChild(detail);
+    badge.appendChild(icon);
+    badge.appendChild(textWrap);
     document.body.appendChild(badge);
 
     window.setTimeout(function () {
