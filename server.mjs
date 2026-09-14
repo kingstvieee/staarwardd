@@ -330,7 +330,7 @@ function taskSchema(){
   };
 }
 
-export const server = http.createServer(async (req,res)=>{
+export async function handleRequest(req,res){
   try {
     if(req.method==='GET' && req.url==='/api/status') { const live=Boolean(process.env.OPENAI_API_KEY) && process.env.STAARWARDD_DEMO_ONLY !== '1' && process.env.STARWARD_DEMO_ONLY !== '1' && process.env.BLESSYNC_DEMO_ONLY !== '1'; return json(res,200,{mode:live?'openai':'demo',model:live?(process.env.OPENAI_MODEL||'gpt-5.6'):null,webSearch:live,voice:'browser',guardian:'cinematic-css'}); }
     if(req.method==='POST' && req.url==='/api/walkthrough') { const result=fullWalkthroughPlan(); return json(res,200,{mode:'walkthrough',...result,sources:[],webSearched:false}); }
@@ -363,10 +363,10 @@ export const server = http.createServer(async (req,res)=>{
       try{const data=await readFile(join(root,'index.html'));res.writeHead(200,{'Content-Type':types['.html']});res.end(data);}catch{json(res,404,{error:'Not found'});}
     } else json(res,500,{error:'Server error'});
   }
-});
+}
+export const server = http.createServer(handleRequest);
 function json(res,status,data){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));}
 function bodyJson(req){return new Promise((resolve,reject)=>{let body='';req.on('data',c=>{body+=c;if(body.length>1e6)reject(new Error('Body too large'));});req.on('end',()=>{try{resolve(JSON.parse(body||'{}'))}catch{reject(new Error('Invalid JSON'))}});req.on('error',reject);});}
 export default server;
 if(process.argv[1]===fileURLToPath(import.meta.url)) server.listen(port,'0.0.0.0',()=>console.log(`StaarWardd is ready at http://localhost:${port}`));
-
 

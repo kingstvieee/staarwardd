@@ -351,6 +351,7 @@ function narrateWalkthroughFinal() {
   utterance.pitch = 0.86;
   utterance.onstart = function () { setVoiceStatus("Guardian is delivering the final briefing…", "speaking"); };
   utterance.onend = function () { setVoiceStatus("Full Guardian run complete. Approval decisions are ready below.", "ready"); };
+  window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 }
 
