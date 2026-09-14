@@ -246,13 +246,16 @@ function renderPortalWorld(portal) {
 
 function renderSharedState(domain) {
   const shared = $("#sharedState");
+  const world = $("#portalWorld");
   const state = hubState[domain.toLowerCase()];
   if (!state) {
     shared.hidden = true;
     shared.innerHTML = "";
+    world.classList.remove("shared-state-visible");
     return;
   }
   shared.hidden = false;
+  world.classList.add("shared-state-visible");
   shared.innerHTML = '<p>SHARED LIVE STATE</p>' + Object.entries(state).map(function (entry) {
     return '<div><span>' + esc(entry[0].replace(/([A-Z])/g, " $1")) + '</span><b>' + esc(entry[1]) + '</b></div>';
   }).join("");
@@ -459,6 +462,7 @@ $("#walkthroughNext").addEventListener("click", function () {
   showWalkthroughStep(walkthroughIndex + 1, false);
 });
 $("#walkthroughPause").addEventListener("click", function () {
+  if (!walkthroughData) return;
   walkthroughPaused = !walkthroughPaused;
   this.textContent = walkthroughPaused ? "Continue" : "Pause";
   this.setAttribute("aria-pressed", String(walkthroughPaused));
