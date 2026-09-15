@@ -3,6 +3,7 @@ import { createReadStream } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { handleGuardianApi } from './guardian/http.mjs';
 
 const root = fileURLToPath(new URL('./public/', import.meta.url));
 await loadEnv();
@@ -206,45 +207,35 @@ export function fullWalkthroughPlan() {
 const portalPlaybooks = {
   Work:{now:['Open the Guardian briefing','Bring schedule, projects, meetings and communications into one conflict scan before choosing the next move.','Open briefing'],today:['Resolve the cross-portal conflict','Protect the priority commitment and prepare updates wherever another portal is affected.','Prepare coordination'],week:['Stabilize the command centre','Reserve focus, meeting and follow-up windows around the work that changes the week.','Build command week']},
   Creativity:{now:['Open the DIGGITSTAAR production lane','Choose the media format, intended audience and next concrete artifact before generating anything.','Enter studio'],today:['Move creation through review','Sequence concept, media, design, AI creation and human review into one production workflow.','Build pipeline'],week:['Prepare an approval-ready release','Complete one coherent version and keep publishing behind an explicit approval gate.','Prepare release']},
-  Home:{now:['Read the household state','Check relevant rooms, devices, security and arrival or departure state before proposing automation.','View home state'],today:['Coordinate the living environment','Prepare device routines, household needs and Guardian automation without changing anything outside permission.','Prepare routine'],week:['Strengthen STAAR Access','Review accessible controls, security exceptions and repeatable household automations.','Review STAAR Access']},
-  Wellbeing:{now:['Regulate before optimizing','Take water, three slower breaths, and a brief movement break before the next demand.','Begin reset'],today:['Protect the energy floor','Pair focused effort with food, hydration, movement, and a realistic stop time.','Add recovery'],week:['Build recovery into the plan','Choose three realistic moments for movement, rest, or quiet.','Add rhythm']},
-  Relationships:{now:['Open the person, not a prompt','Bring the relevant person, shared context, commitment and current communication need into view.','Open person context'],today:['Prepare a human communication','Draft in the user’s voice from real relationship context; keep sending behind explicit approval.','Review communication'],week:['Protect living commitments','Connect meaningful plans and memories to a realistic time without flattening the relationship into tasks.','Review commitments']},
-  Community:{now:['Open the real-world connection layer','Match Toronto places, events and opportunities to location, energy and accessibility needs.','Explore nearby'],today:['Compare accessible possibilities','Evaluate the practical fit of local discovery before travel, registration or commitment.','Build local shortlist'],week:['Extend belonging sustainably','Connect one local experience to a longer-term community path, with recovery and access considered.','Shape community path']},
-  Style:{now:['Step into the fitting room','Use the illuminated racks, mirror, occasion and real wardrobe context to build the silhouette.','Open fitting mirror'],today:['Complete the physical look','Coordinate garments, fit, shoes, accessories and grooming with Guardian Stylist interaction.','Save fitting'],week:['Develop the wardrobe world','Refine real wardrobe gaps and RISING STAARDFORM pieces without turning the portal into an advertisement.','Plan wardrobe']}
+  Home:{now:['Read the home state','Check STAAR Access, devices, routines, security and arrival/departure context before recommending automation.','Open home state'],today:['Prepare one smart-home scene','Group only relevant devices and routines into an arrival, departure, security or household flow.','Prepare scene'],week:['Tune household intelligence','Review repeated home patterns and suggest automations without silently changing devices or security.','Review routines']},
+  Wellbeing:{now:['Choose one stabilizing action','Offer a brief permission-scoped routine or check-in without diagnosing the user.','Choose routine'],today:['Protect a calm block','Coordinate workload and routines so the user has a realistic recovery or focus window.','Protect block'],week:['Build a sustainable rhythm','Turn chosen routines into a light plan that coordinates with Work and Home without medical claims.','Build rhythm']},
+  Relationships:{now:['Open the people context','Surface the relevant person, promise, memory or plan before drafting communication.','Open context'],today:['Protect the commitment','Coordinate timing, preparation and a message draft if another portal creates a conflict.','Prepare commitment'],week:['Strengthen one connection','Choose a realistic shared plan or follow-up and keep all external contact behind approval.','Prepare connection']},
+  Community:{now:['Open the real-world layer','Use location, access needs and interests to frame relevant places, events or opportunities.','Explore nearby'],today:['Build a usable outing','Coordinate route, accessibility, timing and cost before any booking or registration.','Prepare outing'],week:['Choose one meaningful opportunity','Shortlist an event, place, volunteer lane or global experience aligned with the user.','Build shortlist']},
+  Style:{now:['Enter the wardrobe','Use occasion, silhouette, existing wardrobe and RISING STAARDFORM context to stage the next look.','Open wardrobe'],today:['Build the fitting flow','Coordinate garments, shoes, accessories and grooming in a walk-in dressing-room sequence.','Build look'],week:['Close a wardrobe gap','Identify one high-value piece or RSF opportunity; purchases remain behind approval.','Review gap']}
 };
-
-function portalTask(domain, horizon, request, requiresApproval) {
-  const [title, detail, defaultAction] = portalPlaybooks[domain][horizon];
-  return {domain,title,detail:`${detail} Request focus: “${request}”`,time:horizon === 'now' ? 'Now · 20 min' : horizon === 'today' ? 'Today' : 'This week',action:requiresApproval ? 'Review action' : defaultAction,sensitive:Boolean(requiresApproval)};
+function portalTask(domain, horizon, request, sensitive) {
+  const [title, detail, action] = portalPlaybooks[domain][horizon];
+  const suffix = request ? ` Request context: ${request.slice(0,120)}${request.length>120?'…':''}` : '';
+  return {domain,title,detail:`${detail}${suffix}`,time:horizon==='now'?'Now · 2–10 min':horizon==='today'?'Today':'This week',action,sensitive:Boolean(sensitive)};
 }
-function hash(s){ let h=2166136261; for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)} return (h>>>0).toString(36); }
-
+function hash(text){let h=2166136261;for(const ch of text){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return(h>>>0).toString(36)}
 async function loadEnv(){
-  try { const raw=await readFile(new URL('./.env', import.meta.url),'utf8'); for(const line of raw.split(/\r?\n/)){ const m=line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/); if(m && !process.env[m[1]]) process.env[m[1]]=m[2].replace(/^['"]|['"]$/g,''); } } catch {}
+  try{
+    const raw=await readFile(fileURLToPath(new URL('./.env', import.meta.url)),'utf8');
+    for(const line of raw.split(/\r?\n/)){const m=line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);if(!m)continue;let value=m[2];if((value.startsWith('"')&&value.endsWith('"'))||(value.startsWith("'")&&value.endsWith("'")))value=value.slice(1,-1);if(process.env[m[1]]===undefined)process.env[m[1]]=value;}
+  }catch{}
 }
-
 async function aiPlan(input) {
   if (!process.env.OPENAI_API_KEY || process.env.STAARWARDD_DEMO_ONLY === '1' || process.env.STARWARD_DEMO_ONLY === '1' || process.env.BLESSYNC_DEMO_ONLY === '1') return null;
+  const task = taskSchema();
   const schema = {
-    type:'object',
-    additionalProperties:false,
-    required:['summary','domains','sensitive','coordination','now','today','week'],
+    type:'object',additionalProperties:false,required:['summary','domains','sensitive','coordination','now','today','week'],
     properties:{
-      summary:{type:'string'},
-      domains:{type:'array',items:{type:'string',enum:['Work','Creativity','Home','Wellbeing','Relationships','Community','Style']}},
-      sensitive:{type:'boolean'},
-      coordination:{
-        type:'object',additionalProperties:false,required:['detected','agents','exchanges','decision'],
-        properties:{
-          detected:{type:'string'},
-          agents:{type:'array',items:{type:'string',enum:['Work','Creativity','Home','Wellbeing','Relationships','Community','Style']}},
-          exchanges:{type:'array',items:{type:'object',additionalProperties:false,required:['from','to','signal'],properties:{from:{type:'string'},to:{type:'string'},signal:{type:'string'}}}},
-          decision:{type:'string'}
-        }
-      },
-      now:{type:'array',items:taskSchema()},
-      today:{type:'array',items:taskSchema()},
-      week:{type:'array',items:taskSchema()}
+      summary:{type:'string'},domains:{type:'array',items:{type:'string',enum:['Work','Creativity','Home','Wellbeing','Relationships','Community','Style']}},sensitive:{type:'boolean'},
+      coordination:{type:'object',additionalProperties:false,required:['detected','agents','exchanges','decision'],properties:{
+        detected:{type:'string'},agents:{type:'array',items:{type:'string',enum:['Work','Creativity','Home','Wellbeing','Relationships','Community','Style']}},
+        exchanges:{type:'array',items:{type:'object',additionalProperties:false,required:['from','to','signal'],properties:{from:{type:'string',enum:['Work','Creativity','Home','Wellbeing','Relationships','Community','Style']},to:{type:'string',enum:['Work','Creativity','Home','Wellbeing','Relationships','Community','Style']},signal:{type:'string'}}}},decision:{type:'string'}
+      }},now:{type:'array',items:task},today:{type:'array',items:task},week:{type:'array',items:task}
     }
   };
   const request = {
@@ -332,7 +323,11 @@ function taskSchema(){
 
 export async function handleRequest(req,res){
   try {
-    if(req.method==='GET' && req.url==='/api/status') { const live=Boolean(process.env.OPENAI_API_KEY) && process.env.STAARWARDD_DEMO_ONLY !== '1' && process.env.STARWARD_DEMO_ONLY !== '1' && process.env.BLESSYNC_DEMO_ONLY !== '1'; return json(res,200,{mode:live?'openai':'demo',model:live?(process.env.OPENAI_MODEL||'gpt-5.6'):null,webSearch:live,voice:'browser',guardian:'cinematic-css'}); }
+    if(String(req.url||'').startsWith('/api/guardian/')) {
+      const handled=await handleGuardianApi(req,res,{json,bodyJson});
+      if(handled!==false) return;
+    }
+    if(req.method==='GET' && req.url==='/api/status') { const live=Boolean(process.env.OPENAI_API_KEY) && process.env.STAARWARDD_DEMO_ONLY !== '1' && process.env.STARWARD_DEMO_ONLY !== '1' && process.env.BLESSYNC_DEMO_ONLY !== '1'; return json(res,200,{mode:live?'openai':'demo',model:live?(process.env.OPENAI_MODEL||'gpt-5.6'):null,webSearch:live,voice:'browser',guardian:'core-v1'}); }
     if(req.method==='POST' && req.url==='/api/walkthrough') { const result=fullWalkthroughPlan(); return json(res,200,{mode:'walkthrough',...result,sources:[],webSearched:false}); }
     if(req.method==='POST' && req.url==='/api/scenario') { const result=scenarioPlan(); return json(res,200,{mode:'scenario',plan:result.plan,statePatch:result.statePatch,sources:[],webSearched:false}); }
     if(req.method==='POST' && req.url==='/api/plan') { const body=await bodyJson(req); const input=String(body.input||'').slice(0,2000); if(!input.trim()) return json(res,400,{error:'Please enter a request.'}); try { const result=await aiPlan(input); return json(res,200,result?{mode:'openai',plan:result.plan,sources:result.sources,webSearched:result.webSearched}:{mode:'demo',plan:demoPlan(input),sources:[],webSearched:false}); } catch(e){ return json(res,200,{mode:'demo-fallback',warning:e.message,plan:demoPlan(input),sources:[],webSearched:false}); } }
@@ -369,4 +364,3 @@ function json(res,status,data){res.writeHead(status,{'Content-Type':'application
 function bodyJson(req){return new Promise((resolve,reject)=>{let body='';req.on('data',c=>{body+=c;if(body.length>1e6)reject(new Error('Body too large'));});req.on('end',()=>{try{resolve(JSON.parse(body||'{}'))}catch{reject(new Error('Invalid JSON'))}});req.on('error',reject);});}
 export default server;
 if(process.argv[1]===fileURLToPath(import.meta.url)) server.listen(port,'0.0.0.0',()=>console.log(`StaarWardd is ready at http://localhost:${port}`));
-
