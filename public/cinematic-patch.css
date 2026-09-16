@@ -1,49 +1,115 @@
-/* STAARWARDD cinematic motion restore: keeps current portal logic, restores visible flight energy. */
-.cinematic-stage{position:absolute;inset:0;overflow:hidden;perspective:1200px}
-.cinematic-stage::before,.cinematic-stage::after{content:"";position:absolute;inset:-12%;pointer-events:none;z-index:2;opacity:0}
-.cinematic-stage::before{background:radial-gradient(circle at 50% 48%,rgba(255,234,174,.38),rgba(76,214,255,.12) 23%,transparent 52%);mix-blend-mode:screen;filter:blur(8px)}
-.cinematic-stage::after{background:repeating-radial-gradient(ellipse at 50% 45%,rgba(111,225,255,.18) 0 1px,transparent 2px 34px);transform:scale(.7);filter:blur(.3px)}
-.guardian-flight-still{transform-origin:50% 44%;will-change:transform,filter,opacity}
+/* STAARWAARDD cinematic upgrade: preserve the existing Guardian and Hub while increasing theatrical motion, weather, portal energy, and finale scale. */
+.cinematic-stage{position:absolute;inset:0;overflow:hidden;perspective:1400px;transform-style:preserve-3d}
+.cinematic-stage::before,.cinematic-stage::after{content:"";position:absolute;inset:-16%;pointer-events:none;z-index:2;opacity:0}
+.cinematic-stage::before{background:
+  radial-gradient(circle at 50% 46%,rgba(255,238,188,.48),rgba(100,220,255,.15) 23%,transparent 50%),
+  conic-gradient(from 180deg at 50% 50%,transparent 0 24%,rgba(255,255,255,.08) 29%,transparent 35% 62%,rgba(110,220,255,.06) 69%,transparent 78%);
+  mix-blend-mode:screen;filter:blur(9px)}
+.cinematic-stage::after{background:
+  repeating-radial-gradient(ellipse at 50% 45%,rgba(129,229,255,.18) 0 1px,transparent 2px 30px),
+  linear-gradient(105deg,transparent 0 45%,rgba(255,244,202,.16) 50%,transparent 55% 100%);
+  transform:scale(.68);filter:blur(.35px);mix-blend-mode:screen}
+
+.guardian-flight-still{transform-origin:50% 44%;will-change:transform,filter,opacity;backface-visibility:hidden}
 .experience.awakening .guardian-flight-still{animation:staar-camera-flight 6.15s cubic-bezier(.13,.75,.12,1) both}
 .experience.awakening .cinematic-stage::before{animation:staar-flight-glow 6.15s ease-out both}
-.experience.awakening .cinematic-stage::after{animation:staar-flight-wake 4.9s cubic-bezier(.18,.7,.18,1) both}
-.experience.awakening .scene{animation:staar-camera-rumble 5.8s ease-in-out both}
+.experience.awakening .cinematic-stage::after{animation:staar-flight-wake 5.2s cubic-bezier(.18,.7,.18,1) both}
+.experience.awakening .scene{animation:staar-camera-rumble 5.9s ease-in-out both}
 .experience.ready .guardian-flight-still{transform:scale(1.035) translate3d(0,-.5%,0);animation:staar-living-breath 5.2s ease-in-out infinite alternate}
-.experience.maple .guardian-flight-still{filter:brightness(1.16) contrast(1.08) saturate(1.14)}
-.experience.motion-off .guardian-flight-still,.experience.motion-off .cinematic-stage::before,.experience.motion-off .cinematic-stage::after,.experience.motion-off .scene{animation:none!important}
+.experience.maple .guardian-flight-still{animation:staar-finale-guardian 4.2s cubic-bezier(.18,.72,.14,1) both;filter:brightness(1.16) contrast(1.08) saturate(1.14)}
+
+/* Make the shield entrance feel like an actual energy threshold without changing the established architecture. */
+.guardian-gate{filter:drop-shadow(0 0 28px rgba(120,215,255,.22));transition:filter .4s ease}
+.experience.awakening .guardian-gate{animation:staar-gate-breathe 2.8s ease-in-out 2 both}
+.experience.maple .guardian-gate{filter:drop-shadow(0 0 34px rgba(255,227,155,.55)) drop-shadow(0 0 52px rgba(110,220,255,.28));animation:staar-gate-lock 4.1s cubic-bezier(.16,.7,.18,1) both}
+.experience.maple .gate-ring-one{animation:staar-ring-spin 2.8s linear infinite}
+.experience.maple .gate-ring-two{animation:staar-ring-spin-reverse 2.1s linear infinite}
+.experience.maple .gate-core{animation:staar-core-pulse .72s ease-in-out infinite alternate}
+.experience.maple .gate-lightning{animation:staar-lightning-strike .62s steps(2,end) infinite}
+.experience.maple .gate-lightning-b{animation-delay:.13s}
+.experience.maple .gate-lightning-c{animation-delay:.31s}
+
+/* Portal arrivals retain the existing assets but gain distinct spatial emergence. */
+.experience.awakening .portal{transform-style:preserve-3d;filter:drop-shadow(0 0 0 rgba(255,255,255,0))}
+.experience.awakening .portal .portal-energy{animation:staar-portal-charge 1.28s ease-out both;animation-delay:var(--delay)}
+.experience.awakening .portal .portal-art{animation:staar-portal-depth 1.38s cubic-bezier(.16,.78,.2,1) both;animation-delay:var(--delay)}
+.experience.ready .portal{animation:staar-portal-float 4.8s ease-in-out infinite alternate}
+.experience.ready .portal:nth-child(2n){animation-delay:-1.4s}
+.experience.ready .portal:nth-child(3n){animation-delay:-2.6s}
+.experience.ready .portal .portal-energy{animation:staar-energy-idle 2.9s ease-in-out infinite alternate}
+
+/* During each summon beat the full field reacts subtly so the Guardian feels like he is controlling the room. */
+.experience[class*="summon-"] .cinematic-stage::before{opacity:.28}
+.experience.summon-0 .portal:nth-child(1),.experience.summon-1 .portal:nth-child(2),.experience.summon-2 .portal:nth-child(3),.experience.summon-3 .portal:nth-child(4),.experience.summon-4 .portal:nth-child(5),.experience.summon-5 .portal:nth-child(6),.experience.summon-6 .portal:nth-child(7){filter:brightness(1.18) saturate(1.12) drop-shadow(0 0 28px rgba(255,235,175,.45))}
+
+/* Stronger finale: the Hub converges around the established Guardian instead of cutting to a dashboard-style feel. */
+.experience.maple .portal-field{animation:staar-field-converge 4.1s cubic-bezier(.18,.72,.16,1) both}
+.experience.maple .portal{animation:staar-finale-portal 4.05s cubic-bezier(.18,.78,.2,1) both}
+.experience.maple .portal:nth-child(1){animation-delay:.00s}.experience.maple .portal:nth-child(2){animation-delay:.05s}.experience.maple .portal:nth-child(3){animation-delay:.10s}.experience.maple .portal:nth-child(4){animation-delay:.15s}.experience.maple .portal:nth-child(5){animation-delay:.20s}.experience.maple .portal:nth-child(6){animation-delay:.25s}.experience.maple .portal:nth-child(7){animation-delay:.30s}
+.experience.maple .maple-finale{animation:staar-finale-bloom 4.1s ease-out both}
+.experience.maple .shield-shock{animation:staar-shockwave 1.85s cubic-bezier(.14,.75,.16,1) 2 both}
+
 @keyframes staar-camera-flight{
-  0%{transform:scale(1.72) translate3d(0,13%,0);filter:brightness(.58) blur(7px) saturate(.72);opacity:.22}
-  10%{opacity:1;filter:brightness(.88) blur(3px) saturate(.92)}
-  28%{transform:scale(1.36) translate3d(-2%,7%,0);filter:brightness(1.02) blur(.8px) saturate(1.04)}
-  47%{transform:scale(1.18) translate3d(1.2%,2%,0);filter:brightness(1.09) blur(0) saturate(1.09)}
-  66%{transform:scale(1.08) translate3d(-.6%,-.8%,0);filter:brightness(1.13) saturate(1.12)}
-  82%{transform:scale(1.025) translate3d(.35%,-.2%,0);filter:brightness(1.08) saturate(1.08)}
+  0%{transform:scale(1.9) translate3d(0,15%,0) rotateX(1.5deg);filter:brightness(.45) blur(9px) saturate(.7);opacity:.08}
+  8%{opacity:.78;filter:brightness(.72) blur(5px) saturate(.82)}
+  18%{transform:scale(1.58) translate3d(-3%,10%,40px) rotateZ(-.35deg);filter:brightness(.9) blur(2.8px) saturate(.92)}
+  31%{transform:scale(1.34) translate3d(2.3%,6%,90px) rotateZ(.28deg);filter:brightness(1.02) blur(.9px) saturate(1.03)}
+  47%{transform:scale(1.18) translate3d(-1%,2%,130px) rotateZ(-.18deg);filter:brightness(1.1) blur(0) saturate(1.1)}
+  63%{transform:scale(1.085) translate3d(.8%,-.9%,155px);filter:brightness(1.14) saturate(1.13)}
+  78%{transform:scale(1.025) translate3d(-.3%,-.35%,115px);filter:brightness(1.09) saturate(1.09)}
+  92%{transform:scale(1.045) translate3d(.18%,-.62%,60px);filter:brightness(1.13) contrast(1.03) saturate(1.1)}
   100%{transform:scale(1.035) translate3d(0,-.5%,0);filter:brightness(1.03) saturate(1.03);opacity:1}
 }
 @keyframes staar-flight-glow{
-  0%{opacity:0;transform:scale(.42)}
-  15%{opacity:.18}
-  38%{opacity:.72;transform:scale(.82)}
-  68%{opacity:.38;transform:scale(1.16)}
-  100%{opacity:0;transform:scale(1.42)}
+  0%{opacity:0;transform:scale(.36) rotate(-1deg)}
+  12%{opacity:.2}
+  34%{opacity:.75;transform:scale(.78) rotate(.6deg)}
+  58%{opacity:.52;transform:scale(1.04)}
+  76%{opacity:.28;transform:scale(1.28) rotate(-.3deg)}
+  100%{opacity:0;transform:scale(1.6)}
 }
 @keyframes staar-flight-wake{
-  0%{opacity:0;transform:scale(.35) rotate(0deg)}
-  16%{opacity:.3}
-  55%{opacity:.58;transform:scale(1.04) rotate(1deg)}
-  100%{opacity:0;transform:scale(1.78) rotate(-1deg)}
+  0%{opacity:0;transform:scale(.28) rotate(-2deg) translateY(9%)}
+  14%{opacity:.28}
+  38%{opacity:.68;transform:scale(.8) rotate(1deg) translateY(2%)}
+  70%{opacity:.4;transform:scale(1.28) rotate(-.5deg) translateY(-2%)}
+  100%{opacity:0;transform:scale(1.95) rotate(.4deg) translateY(-5%)}
 }
 @keyframes staar-camera-rumble{
-  0%,100%{transform:translate(-50%,-50%)}
-  18%{transform:translate(calc(-50% - 3px),calc(-50% + 2px))}
-  24%{transform:translate(calc(-50% + 4px),calc(-50% - 2px))}
-  31%{transform:translate(calc(-50% - 2px),calc(-50% - 1px))}
-  44%{transform:translate(calc(-50% + 2px),calc(-50% + 1px))}
-  70%{transform:translate(-50%,-50%)}
+  0%,11%,100%{transform:translate(-50%,-50%)}
+  17%{transform:translate(calc(-50% - 2px),calc(-50% + 1px))}
+  22%{transform:translate(calc(-50% + 4px),calc(-50% - 2px))}
+  27%{transform:translate(calc(-50% - 3px),calc(-50% + 2px))}
+  34%{transform:translate(calc(-50% + 2px),calc(-50% - 1px))}
+  43%{transform:translate(calc(-50% - 1px),calc(-50% + 1px))}
+  58%{transform:translate(calc(-50% + 1px),calc(-50% - 1px))}
+  72%{transform:translate(-50%,-50%)}
 }
 @keyframes staar-living-breath{
   from{transform:scale(1.03) translate3d(0,-.4%,0);filter:brightness(1.01) saturate(1.02)}
-  to{transform:scale(1.045) translate3d(0,-.8%,0);filter:brightness(1.07) saturate(1.08)}
+  to{transform:scale(1.048) translate3d(0,-.9%,12px);filter:brightness(1.08) saturate(1.09)}
 }
-@media(max-width:720px){.experience.awakening .guardian-flight-still{animation-duration:5.5s}.cinematic-stage::after{inset:-22%}}
-@media(prefers-reduced-motion:reduce){.experience.awakening .guardian-flight-still,.experience.awakening .cinematic-stage::before,.experience.awakening .cinematic-stage::after,.experience.awakening .scene,.experience.ready .guardian-flight-still{animation:none!important}}
+@keyframes staar-finale-guardian{
+  0%{transform:scale(1.035) translate3d(0,-.5%,0);filter:brightness(1.04) saturate(1.04)}
+  35%{transform:scale(1.045) translate3d(0,-1.1%,35px);filter:brightness(1.15) saturate(1.12) drop-shadow(0 0 0 rgba(255,255,255,0))}
+  74%{transform:scale(1.025) translate3d(0,-1.7%,70px);filter:brightness(1.25) saturate(1.18) drop-shadow(0 0 22px rgba(255,235,176,.34))}
+  100%{transform:scale(1.035) translate3d(0,-.7%,0);filter:brightness(1.12) saturate(1.1) drop-shadow(0 0 10px rgba(120,220,255,.18))}
+}
+@keyframes staar-gate-breathe{0%,100%{filter:drop-shadow(0 0 18px rgba(110,210,255,.16))}50%{filter:drop-shadow(0 0 34px rgba(255,231,169,.34)) drop-shadow(0 0 48px rgba(110,210,255,.16))}}
+@keyframes staar-gate-lock{0%{transform:scale(.94);opacity:.72}52%{transform:scale(1.035);opacity:1}78%{transform:scale(1.015)}100%{transform:scale(1);opacity:1}}
+@keyframes staar-ring-spin{to{transform:rotate(360deg)}}
+@keyframes staar-ring-spin-reverse{to{transform:rotate(-360deg)}}
+@keyframes staar-core-pulse{from{filter:brightness(1) drop-shadow(0 0 8px rgba(255,255,255,.25));transform:scale(.98)}to{filter:brightness(1.35) drop-shadow(0 0 24px rgba(255,225,155,.62));transform:scale(1.04)}}
+@keyframes staar-lightning-strike{0%,54%,100%{opacity:.15;filter:brightness(1)}55%,63%{opacity:1;filter:brightness(1.9) drop-shadow(0 0 10px rgba(150,225,255,.8))}64%,72%{opacity:.35}73%,80%{opacity:.88}}
+@keyframes staar-portal-charge{0%{opacity:0;transform:scale(.35);filter:blur(12px)}45%{opacity:.9;transform:scale(1.2);filter:blur(2px)}100%{opacity:.62;transform:scale(1);filter:blur(0)}}
+@keyframes staar-portal-depth{0%{opacity:0;transform:translateZ(-220px) scale(.55) rotateY(-7deg);filter:blur(8px) brightness(.6)}55%{opacity:1;transform:translateZ(36px) scale(1.08) rotateY(1deg);filter:blur(.4px) brightness(1.17)}100%{opacity:1;transform:translateZ(0) scale(1) rotateY(0);filter:blur(0) brightness(1)}}
+@keyframes staar-portal-float{from{transform:translate3d(0,-2px,0)}to{transform:translate3d(0,5px,16px)}}
+@keyframes staar-energy-idle{from{opacity:.48;filter:brightness(.95)}to{opacity:.86;filter:brightness(1.22) drop-shadow(0 0 12px rgba(255,236,183,.22))}}
+@keyframes staar-field-converge{0%{transform:scale(1)}46%{transform:scale(1.025)}72%{transform:scale(.992)}100%{transform:scale(1)}}
+@keyframes staar-finale-portal{0%{filter:brightness(1);transform:translateZ(0) scale(1)}45%{filter:brightness(1.22) saturate(1.15) drop-shadow(0 0 16px rgba(255,230,170,.32));transform:translateZ(30px) scale(1.025)}72%{filter:brightness(1.1) saturate(1.08);transform:translateZ(10px) scale(1.01)}100%{filter:brightness(1.04);transform:translateZ(0) scale(1)}}
+@keyframes staar-finale-bloom{0%{filter:brightness(.85);opacity:.2}35%{filter:brightness(1.18);opacity:.82}68%{filter:brightness(1.42);opacity:1}100%{filter:brightness(1.08);opacity:1}}
+@keyframes staar-shockwave{0%{opacity:0;transform:scale(.3)}16%{opacity:.8}70%{opacity:.28;transform:scale(1.35)}100%{opacity:0;transform:scale(1.72)}}
+
+.experience.motion-off .guardian-flight-still,.experience.motion-off .cinematic-stage::before,.experience.motion-off .cinematic-stage::after,.experience.motion-off .scene,.experience.motion-off .guardian-gate,.experience.motion-off .portal,.experience.motion-off .portal-energy,.experience.motion-off .portal-art,.experience.motion-off .maple-finale,.experience.motion-off .shield-shock{animation:none!important}
+@media(max-width:720px){.experience.awakening .guardian-flight-still{animation-duration:5.5s}.cinematic-stage::after{inset:-24%}.experience.ready .portal{animation-duration:5.4s}}
+@media(prefers-reduced-motion:reduce){.experience.awakening .guardian-flight-still,.experience.awakening .cinematic-stage::before,.experience.awakening .cinematic-stage::after,.experience.awakening .scene,.experience.ready .guardian-flight-still,.experience .guardian-gate,.experience .portal,.experience .portal-energy,.experience .portal-art,.experience .maple-finale,.experience .shield-shock{animation:none!important}}
