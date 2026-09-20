@@ -7,9 +7,10 @@
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
+    "amazon:alexa": "node amazon/alexa-mcp-server.mjs",
+    "amazon:test": "node amazon/test-alexa-mcp.mjs",
     "test": "node --test test/server.test.mjs",
-    "check": "node --check server.mjs && node --check public/app.js"
+    "check": "node --check server.mjs && node --check public/app.js && node --check amazon/alexa-mcp-server.mjs && node --check amazon/test-alexa-mcp.mjs"
   },
   "engines": { "node": ">=20" }
 }
-
