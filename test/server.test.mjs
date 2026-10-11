@@ -55,6 +55,7 @@ test('server serves app, query URLs, media, and API', async t => {
   assert.match(homeText, /id="coordinationTrace"/);
   assert.match(homeText, /id="fullDemoButton"/);
   assert.match(homeText, /id="walkthroughStage"/);
+  assert.match(homeText, /id="integrationStatus"/);
   assert.match(homeText, /staarwardd-guardian-toronto-v9\.png/);
   assert.match(homeText, /staarwardd-summoning-bubble-v9\.png/);
   assert.match(homeText, /staarwardd-summoning-sword-v9\.png/);

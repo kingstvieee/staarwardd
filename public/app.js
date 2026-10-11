@@ -10,6 +10,16 @@ const portals = [
   {name:"Style",icon:"△",promise:"Walk into your future wardrobe",kicker:"FUTURISTIC WARDROBE · RISING STAARDFORM",description:"A physical-feeling dressing room of illuminated racks, mirrors, outfits and a responsive Guardian Stylist—not a storefront pasted onto a page.",status:[["Wardrobe","Synced"],["Fitting mirror","Ready"],["Stylist","Present"]],zones:[["Illuminated racks","Browse complete looks"],["Fitting mirror","See silhouette and fit"],["Outfit plinth","Build the full look"],["Stylist station","Refine with Guardian"]],feature:"Enter RISING STAARDFORM atelier",prompts:["Walk me through a complete outfit fitting","Style a look from my real wardrobe","Build a RISING STAARDFORM look for my event"],tools:["Fitting mirror","Wardrobe intelligence","Guardian Stylist"]}
 ];
 
+const portalIntegrationMeta = {
+  Creativity:{canonical:"Creativity",alias:"",capabilities:"draft asset · review rights · prepare release"},
+  Work:{canonical:"Work",alias:"",capabilities:"prepare brief · summarize context · draft update"},
+  Home:{canonical:"Home",alias:"",capabilities:"prepare routine · inspect local state"},
+  Wellbeing:{canonical:"Well-being",alias:"Wellbeing",capabilities:"private check-in · prepare recovery routine"},
+  Relationships:{canonical:"Relationships",alias:"",capabilities:"draft message · prepare commitment"},
+  Community:{canonical:"Events",alias:"Community",capabilities:"compare options · prepare registration"},
+  Style:{canonical:"Style",alias:"",capabilities:"prepare look · review wardrobe"}
+};
+
 const PORTAL_START = 6.25;
 const PORTAL_GAP = 1.15;
 const SHIELD_START = PORTAL_START + (PORTAL_GAP * 6) + 1.25;
@@ -250,6 +260,8 @@ function renderPortalWorld(portal) {
     $("#command").focus();
     addLog(portal.feature + " prepared", portal.name + " agent");
   };
+  const integration = portalIntegrationMeta[portal.name];
+  $("#integrationStatus").textContent = integration.canonical + (integration.alias ? " (legacy " + integration.alias + ")" : "") + " integration · provider not connected · preparation only · " + integration.capabilities;
   $("#guardianState").textContent = portal.name === "Wellbeing"
     ? "Coordinating permitted context—never diagnosing"
     : "Watching relevant signals—acting only by permission";
