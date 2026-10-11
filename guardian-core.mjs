@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 
 export const CANONICAL_PORTALS = Object.freeze([
   'Creativity',
@@ -30,6 +30,13 @@ export function resolvePortal(value) {
   if (PORTAL_ALIASES[key]) return { canonical: PORTAL_ALIASES[key], alias: key };
   if (PORTAL_KEYS[key]) return { canonical: PORTAL_KEYS[key], alias: null };
   return null;
+}
+
+export function isOwnerTokenValid(authorization, expected = process.env.STAARWAARDD_OWNER_TOKEN) {
+  if (!expected || typeof authorization !== 'string' || !authorization.startsWith('Bearer ')) return false;
+  const supplied = Buffer.from(authorization.slice(7));
+  const configured = Buffer.from(expected);
+  return supplied.length === configured.length && timingSafeEqual(supplied, configured);
 }
 
 export function portalContract() {

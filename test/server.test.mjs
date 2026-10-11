@@ -115,7 +115,7 @@ test('server serves app, query URLs, media, and API', async t => {
   assert.deepEqual(await alias.json(), { canonical: 'Events', alias: 'community' });
 
   const denied = await fetch(base + '/api/guardian/authorize', {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'send_message' })
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'send_message', ownerAuthenticated: true, approval: true })
   });
   assert.equal((await denied.json()).result, 'DENIED_APPROVAL');
 

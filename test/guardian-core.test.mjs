@@ -1,11 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AuditLedger, CompletionContract, SafetyController, portalContract, resolvePortal } from '../guardian-core.mjs';
+import { AuditLedger, CompletionContract, SafetyController, isOwnerTokenValid, portalContract, resolvePortal } from '../guardian-core.mjs';
 
 test('portal migration preserves Community and Wellbeing as backward-compatible aliases', () => {
   assert.deepEqual(resolvePortal('Community'), { canonical: 'Events', alias: 'community' });
   assert.deepEqual(resolvePortal('Wellbeing'), { canonical: 'Well-being', alias: 'wellbeing' });
   assert.deepEqual(portalContract().map((portal) => portal.name), ['Creativity', 'Work', 'Home', 'Well-being', 'Relationships', 'Events', 'Style']);
+});
+
+test('owner token validation is explicit and constant-time compatible', () => {
+  assert.equal(isOwnerTokenValid('Bearer owner-secret', 'owner-secret'), true);
+  assert.equal(isOwnerTokenValid('Bearer wrong', 'owner-secret'), false);
+  assert.equal(isOwnerTokenValid('Bearer owner-secret', ''), false);
 });
 
 test('external actions are denied without explicit owner approval', () => {

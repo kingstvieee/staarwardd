@@ -9,7 +9,7 @@ Implemented:
 - Canonical portal contract: Creativity, Work, Home, Well-being, Relationships, Events, Style.
 - Backward-compatible aliases: `Community → Events`, `Wellbeing → Well-being`.
 - Deny-by-default action authorization for external or consequential actions.
-- Explicit approval plus authenticated-owner inputs as prerequisites for prepared external actions.
+- Explicit approval plus a server-validated owner bearer token as prerequisites for prepared external actions.
 - Independent in-process lockdown and restore controls.
 - Hash-chained bounded audit ledger with integrity verification.
 - Evidence-based completion states: PLANNED, BLOCKED, IMPLEMENTED_UNVERIFIED, VERIFIED, USER_ACCEPTED.
@@ -25,7 +25,7 @@ Implemented:
 ## Boundaries and non-claims
 
 - The action gateway prepares and authorizes; it never executes external side effects.
-- `ownerAuthenticated` is an explicit policy input, not proof of a production identity system. Real authentication remains a follow-on milestone.
+- The prototype validates `Authorization: Bearer ...` against `STAARWAARDD_OWNER_TOKEN`; request JSON cannot assert owner identity. A production identity/session provider remains a follow-on milestone.
 - The audit ledger is in-memory and bounded; it is not a tamper-resistant persistent ledger.
 - Lockdown is process-local; cross-device emergency propagation is not yet implemented.
 - No provider connectors, device control, payments, deployment, telemetry, or background automation are enabled.

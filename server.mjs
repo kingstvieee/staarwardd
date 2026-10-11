@@ -3,7 +3,7 @@ import { createReadStream } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { guardianCompletion, guardianLedger, guardianSafety, portalContract, resolvePortal } from './guardian-core.mjs';
+import { guardianCompletion, guardianLedger, guardianSafety, isOwnerTokenValid, portalContract, resolvePortal } from './guardian-core.mjs';
 
 const root = fileURLToPath(new URL('./public/', import.meta.url));
 await loadEnv();
@@ -337,9 +337,9 @@ export async function handleRequest(req,res){
     if(req.method==='GET' && req.url==='/api/guardian/contract') return json(res,200,{portals:portalContract(),safety:{locked:guardianSafety.locked,ledgerVerified:guardianLedger.verify()},completionStatuses:['PLANNED','BLOCKED','IN_PROGRESS','IMPLEMENTED_UNVERIFIED','VERIFIED','USER_ACCEPTED']});
     if(req.method==='GET' && req.url==='/api/guardian/audit') return json(res,200,{verified:guardianLedger.verify(),events:guardianLedger.list()});
     if(req.method==='POST' && req.url==='/api/guardian/resolve-portal') { const body=await bodyJson(req); const result=resolvePortal(body.portal); return result ? json(res,200,result) : json(res,404,{error:'Unknown portal'}); }
-    if(req.method==='POST' && req.url==='/api/guardian/lockdown') { guardianSafety.lockdown({actor:'owner'}); return json(res,200,{locked:true}); }
-    if(req.method==='POST' && req.url==='/api/guardian/restore') { guardianSafety.restore({actor:'owner'}); return json(res,200,{locked:false}); }
-    if(req.method==='POST' && req.url==='/api/guardian/authorize') { const body=await bodyJson(req); return json(res,200,guardianSafety.authorize({action:body.action,approval:body.approval,ownerAuthenticated:body.ownerAuthenticated,actor:body.actor,metadata:body.metadata})); }
+    if(req.method==='POST' && req.url==='/api/guardian/lockdown') { if(!isOwnerTokenValid(req.headers.authorization)) return json(res,401,{error:'Authenticated owner required'}); guardianSafety.lockdown({actor:'owner'}); return json(res,200,{locked:true}); }
+    if(req.method==='POST' && req.url==='/api/guardian/restore') { if(!isOwnerTokenValid(req.headers.authorization)) return json(res,401,{error:'Authenticated owner required'}); guardianSafety.restore({actor:'owner'}); return json(res,200,{locked:false}); }
+    if(req.method==='POST' && req.url==='/api/guardian/authorize') { const body=await bodyJson(req); return json(res,200,guardianSafety.authorize({action:body.action,approval:body.approval,ownerAuthenticated:isOwnerTokenValid(req.headers.authorization),actor:body.actor,metadata:body.metadata})); }
     if(req.method==='POST' && req.url==='/api/guardian/completion') { const body=await bodyJson(req); try { if(body.operation==='create') return json(res,201,guardianCompletion.create(body)); if(body.operation==='evidence') return json(res,200,guardianCompletion.addEvidence(body)); if(body.operation==='verify') return json(res,200,guardianCompletion.verify(body)); if(body.operation==='accept') return json(res,200,guardianCompletion.accept(body)); if(body.operation==='get') { const task=guardianCompletion.get(body.taskId); return task ? json(res,200,task) : json(res,404,{error:'Task not found'}); } return json(res,400,{error:'Unknown completion operation'}); } catch(error) { return json(res,400,{error:error.message}); } }
     if(req.method==='POST' && req.url==='/api/walkthrough') { const result=fullWalkthroughPlan(); return json(res,200,{mode:'walkthrough',...result,sources:[],webSearched:false}); }
     if(req.method==='POST' && req.url==='/api/scenario') { const result=scenarioPlan(); return json(res,200,{mode:'scenario',plan:result.plan,statePatch:result.statePatch,sources:[],webSearched:false}); }
