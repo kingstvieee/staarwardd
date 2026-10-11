@@ -3,6 +3,7 @@ import { createReadStream } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { guardianCompletion, guardianLedger, guardianSafety, portalContract, resolvePortal } from './guardian-core.mjs';
 
 const root = fileURLToPath(new URL('./public/', import.meta.url));
 await loadEnv();
@@ -333,6 +334,13 @@ function taskSchema(){
 export async function handleRequest(req,res){
   try {
     if(req.method==='GET' && req.url==='/api/status') { const live=Boolean(process.env.OPENAI_API_KEY) && process.env.STAARWARDD_DEMO_ONLY !== '1' && process.env.STARWARD_DEMO_ONLY !== '1' && process.env.BLESSYNC_DEMO_ONLY !== '1'; return json(res,200,{mode:live?'openai':'demo',model:live?(process.env.OPENAI_MODEL||'gpt-5.6'):null,webSearch:live,voice:'browser',guardian:'cinematic-css'}); }
+    if(req.method==='GET' && req.url==='/api/guardian/contract') return json(res,200,{portals:portalContract(),safety:{locked:guardianSafety.locked,ledgerVerified:guardianLedger.verify()},completionStatuses:['PLANNED','BLOCKED','IN_PROGRESS','IMPLEMENTED_UNVERIFIED','VERIFIED','USER_ACCEPTED']});
+    if(req.method==='GET' && req.url==='/api/guardian/audit') return json(res,200,{verified:guardianLedger.verify(),events:guardianLedger.list()});
+    if(req.method==='POST' && req.url==='/api/guardian/resolve-portal') { const body=await bodyJson(req); const result=resolvePortal(body.portal); return result ? json(res,200,result) : json(res,404,{error:'Unknown portal'}); }
+    if(req.method==='POST' && req.url==='/api/guardian/lockdown') { guardianSafety.lockdown({actor:'owner'}); return json(res,200,{locked:true}); }
+    if(req.method==='POST' && req.url==='/api/guardian/restore') { guardianSafety.restore({actor:'owner'}); return json(res,200,{locked:false}); }
+    if(req.method==='POST' && req.url==='/api/guardian/authorize') { const body=await bodyJson(req); return json(res,200,guardianSafety.authorize({action:body.action,approval:body.approval,ownerAuthenticated:body.ownerAuthenticated,actor:body.actor,metadata:body.metadata})); }
+    if(req.method==='POST' && req.url==='/api/guardian/completion') { const body=await bodyJson(req); try { if(body.operation==='create') return json(res,201,guardianCompletion.create(body)); if(body.operation==='evidence') return json(res,200,guardianCompletion.addEvidence(body)); if(body.operation==='verify') return json(res,200,guardianCompletion.verify(body)); if(body.operation==='accept') return json(res,200,guardianCompletion.accept(body)); if(body.operation==='get') { const task=guardianCompletion.get(body.taskId); return task ? json(res,200,task) : json(res,404,{error:'Task not found'}); } return json(res,400,{error:'Unknown completion operation'}); } catch(error) { return json(res,400,{error:error.message}); } }
     if(req.method==='POST' && req.url==='/api/walkthrough') { const result=fullWalkthroughPlan(); return json(res,200,{mode:'walkthrough',...result,sources:[],webSearched:false}); }
     if(req.method==='POST' && req.url==='/api/scenario') { const result=scenarioPlan(); return json(res,200,{mode:'scenario',plan:result.plan,statePatch:result.statePatch,sources:[],webSearched:false}); }
     if(req.method==='POST' && req.url==='/api/plan') { const body=await bodyJson(req); const input=String(body.input||'').slice(0,2000); if(!input.trim()) return json(res,400,{error:'Please enter a request.'}); try { const result=await aiPlan(input); return json(res,200,result?{mode:'openai',plan:result.plan,sources:result.sources,webSearched:result.webSearched}:{mode:'demo',plan:demoPlan(input),sources:[],webSearched:false}); } catch(e){ return json(res,200,{mode:'demo-fallback',warning:e.message,plan:demoPlan(input),sources:[],webSearched:false}); } }
@@ -369,4 +377,3 @@ function json(res,status,data){res.writeHead(status,{'Content-Type':'application
 function bodyJson(req){return new Promise((resolve,reject)=>{let body='';req.on('data',c=>{body+=c;if(body.length>1e6)reject(new Error('Body too large'));});req.on('end',()=>{try{resolve(JSON.parse(body||'{}'))}catch{reject(new Error('Invalid JSON'))}});req.on('error',reject);});}
 export default server;
 if(process.argv[1]===fileURLToPath(import.meta.url)) server.listen(port,'0.0.0.0',()=>console.log(`StaarWardd is ready at http://localhost:${port}`));
-

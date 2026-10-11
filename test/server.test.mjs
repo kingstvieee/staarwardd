@@ -103,6 +103,35 @@ test('server serves app, query URLs, media, and API', async t => {
   assert.equal(walkthroughData.mode, 'walkthrough');
   assert.equal(walkthroughData.walkthrough.steps.length, 7);
   assert.deepEqual(walkthroughData.walkthrough.domains, ['Work', 'Creativity', 'Community', 'Style', 'Relationships', 'Wellbeing', 'Home']);
+
+  const contract = await fetch(base + '/api/guardian/contract');
+  assert.equal(contract.status, 200);
+  const contractData = await contract.json();
+  assert.deepEqual(contractData.portals.map(item => item.name), ['Creativity', 'Work', 'Home', 'Well-being', 'Relationships', 'Events', 'Style']);
+
+  const alias = await fetch(base + '/api/guardian/resolve-portal', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ portal: 'Community' })
+  });
+  assert.deepEqual(await alias.json(), { canonical: 'Events', alias: 'community' });
+
+  const denied = await fetch(base + '/api/guardian/authorize', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'send_message' })
+  });
+  assert.equal((await denied.json()).result, 'DENIED_APPROVAL');
+
+  const created = await fetch(base + '/api/guardian/completion', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ operation: 'create', title: 'Milo pilot', criteria: ['render', 'owner review'] })
+  });
+  const task = await created.json();
+  assert.equal(task.status, 'PLANNED');
+  const evidence = await fetch(base + '/api/guardian/completion', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ operation: 'evidence', taskId: task.id, evidence: 'Render test passed' })
+  });
+  assert.equal((await evidence.json()).status, 'IMPLEMENTED_UNVERIFIED');
+  const verified = await fetch(base + '/api/guardian/completion', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ operation: 'verify', taskId: task.id })
+  });
+  assert.equal((await verified.json()).status, 'VERIFIED');
 });
 
 test('single-domain requests do not activate unrelated portal agents', () => {
