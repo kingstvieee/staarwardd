@@ -1,19 +1,21 @@
-# STAARWAARDD Expanded Implementation — Persistent Audit and Portal Integration
+# STAARWAARDD Expanded Implementation — Persistent Audit, Portal Integration, and Policy Boundaries
 
 ## Implemented
 
 The Guardian audit ledger now supports durable local JSONL storage through `STAARWAARDD_AUDIT_PATH`, defaults to `data/guardian-audit.jsonl`, replays records on process start, and rejects tampered hash chains. Runtime audit records are excluded from Git. Completion tasks reconstruct from persisted task, evidence, verification, and acceptance receipts.
 
-The portal registry now exposes the intended seven canonical portals with controlled aliases and configuration-driven capabilities. Every capability is explicitly marked `NOT_CONNECTED` and `PREPARE_ONLY`. The new portal-action endpoint resolves `Community` to `Events`, validates the requested capability, records a prepare-only authorization receipt, and never executes a provider action.
+The portal registry exposes the intended seven canonical portals with controlled aliases and configuration-driven capabilities. Every capability is explicitly marked `NOT_CONNECTED` and `PREPARE_ONLY`. The portal-action endpoint resolves `Community` to `Events`, validates the requested capability, records a prepare-only authorization receipt, and never executes a provider action.
+
+The Guardian Constitution policy layer adds L0–L5 severity decisions, deny-by-default approval rules, lockdown precedence, and an untrusted-content boundary. External pages, documents, transcripts, messages, videos, and tool outputs are treated as data only; they cannot change policy or authorize tools.
 
 ## Verification
 
-- Full test suite: **17/17 passed**.
+- Full test suite: **19/19 passed**.
 - Syntax check: passed for `server.mjs` and `public/app.js`.
 - Diff check: passed.
 - Persistence tests cover replay and tamper rejection.
 - Completion tests cover reconstruction after a fresh ledger instance.
-- HTTP tests cover contract, integration registry, alias resolution, prepare-only portal action, authorization denial, and completion lifecycle.
+- HTTP tests cover policy, untrusted-content inspection, contract, integration registry, alias resolution, prepare-only portal action, authorization denial, and completion lifecycle.
 
 ## Boundaries
 
@@ -23,4 +25,4 @@ Owner authentication remains a prototype bearer-token gate using `STAARWAARDD_OW
 
 ## Locked-surface impact
 
-Existing cinematic assets, app identity, routes, audio defaults, legacy Community/Wellbeing behavior, and deterministic planner tests remain preserved. The canonical Events and Well-being identities are available through the contract and integration APIs with backward-compatible aliases; visible portal-card migration remains staged to avoid replacing approved visual surfaces without a dedicated UI review.
+Existing cinematic assets, app identity, routes, audio defaults, legacy Community/Wellbeing behavior, and deterministic planner tests remain preserved. Canonical Events and Well-being identities are available through contract and integration APIs with backward-compatible aliases; visible portal-card migration remains staged to avoid replacing approved visual surfaces without a dedicated UI review.

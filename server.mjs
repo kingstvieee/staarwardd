@@ -4,6 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { guardianCompletion, guardianLedger, guardianSafety, isOwnerTokenValid, portalContract, portalIntegrationContract, resolvePortal } from './guardian-core.mjs';
+import { inspectUntrustedContent, POLICY_VERSION, SEVERITY_LEVELS } from './guardian-policy.mjs';
 
 const root = fileURLToPath(new URL('./public/', import.meta.url));
 await loadEnv();
@@ -335,9 +336,11 @@ export async function handleRequest(req,res){
   try {
     if(req.method==='GET' && req.url==='/api/status') { const live=Boolean(process.env.OPENAI_API_KEY) && process.env.STAARWARDD_DEMO_ONLY !== '1' && process.env.STARWARD_DEMO_ONLY !== '1' && process.env.BLESSYNC_DEMO_ONLY !== '1'; return json(res,200,{mode:live?'openai':'demo',model:live?(process.env.OPENAI_MODEL||'gpt-5.6'):null,webSearch:live,voice:'browser',guardian:'cinematic-css'}); }
     if(req.method==='GET' && req.url==='/api/guardian/contract') return json(res,200,{portals:portalContract(),safety:{locked:guardianSafety.locked,ledgerVerified:guardianLedger.verify()},completionStatuses:['PLANNED','BLOCKED','IN_PROGRESS','IMPLEMENTED_UNVERIFIED','VERIFIED','USER_ACCEPTED']});
+    if(req.method==='GET' && req.url==='/api/guardian/policy') return json(res,200,{policyVersion:POLICY_VERSION,severityLevels:SEVERITY_LEVELS,externalContent:'UNTRUSTED_DATA_ONLY'});
     if(req.method==='GET' && req.url==='/api/guardian/integrations') return json(res,200,{portals:portalIntegrationContract(),providerPolicy:'No provider is connected; all capabilities are prepare-only.'});
     if(req.method==='GET' && req.url==='/api/guardian/audit') return json(res,200,{verified:guardianLedger.verify(),events:guardianLedger.list()});
     if(req.method==='POST' && req.url==='/api/guardian/resolve-portal') { const body=await bodyJson(req); const result=resolvePortal(body.portal); return result ? json(res,200,result) : json(res,404,{error:'Unknown portal'}); }
+    if(req.method==='POST' && req.url==='/api/guardian/inspect-content') { const body=await bodyJson(req); return json(res,200,inspectUntrustedContent(body.content)); }
     if(req.method==='POST' && req.url==='/api/guardian/portal-action') { const body=await bodyJson(req); const resolved=resolvePortal(body.portal); if(!resolved) return json(res,404,{error:'Unknown portal'}); const integration=portalIntegrationContract().find((portal) => portal.name===resolved.canonical); const capability=String(body.capability||'').trim(); if(!capability || !integration.capabilities.includes(capability)) return json(res,400,{error:'Unsupported portal capability',portal:resolved.canonical,capabilities:integration.capabilities}); const authorization=guardianSafety.authorize({action:'prepare',actor:body.actor||'unknown',metadata:{portal:resolved.canonical,capability,alias:resolved.alias}}); return json(res,200,{portal:resolved.canonical,capability,providerStatus:integration.providerStatus,executionMode:integration.executionMode,executed:authorization.executed,authorization}); }
     if(req.method==='POST' && req.url==='/api/guardian/lockdown') { if(!isOwnerTokenValid(req.headers.authorization)) return json(res,401,{error:'Authenticated owner required'}); guardianSafety.lockdown({actor:'owner'}); return json(res,200,{locked:true}); }
     if(req.method==='POST' && req.url==='/api/guardian/restore') { if(!isOwnerTokenValid(req.headers.authorization)) return json(res,401,{error:'Authenticated owner required'}); guardianSafety.restore({actor:'owner'}); return json(res,200,{locked:false}); }

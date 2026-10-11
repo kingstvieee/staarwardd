@@ -1,5 +1,6 @@
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { PersistentAuditStore } from './guardian-persistence.mjs';
+import { permissionDecision, POLICY_VERSION } from './guardian-policy.mjs';
 
 export const CANONICAL_PORTALS = Object.freeze([
   'Creativity',
@@ -145,21 +146,19 @@ export class SafetyController {
 
   authorize({ action, approval = false, ownerAuthenticated = false, actor = 'unknown', metadata = {} } = {}) {
     const classified = classifyAction(action);
-    let result = 'ALLOWED_PREPARE';
-    let reason = 'Prepared locally; no external side effect was performed.';
-    if (this.#locked) {
-      result = 'DENIED_LOCKDOWN';
-      reason = 'Guardian lockdown is active; only inspection is available.';
-    } else if (classified.external && (!approval || !ownerAuthenticated)) {
-      result = 'DENIED_APPROVAL';
-      reason = 'Explicit owner approval and authenticated owner context are required.';
-    }
+    const policy = permissionDecision({ action: classified.action, approval, ownerAuthenticated, locked: this.#locked });
+    const result = policy.result === 'ALLOW_PREPARE' ? 'ALLOWED_PREPARE' : policy.result.replace('DENY_', 'DENIED_');
+    const reason = result === 'ALLOWED_PREPARE'
+      ? 'Prepared locally; no external side effect was performed.'
+      : result === 'DENIED_LOCKDOWN'
+        ? 'Guardian lockdown is active; only inspection is available.'
+        : 'Explicit owner approval and authenticated owner context are required.';
     const entry = this.#ledger.append({
       type: 'ACTION_AUTHORIZATION', actor, action: classified.action,
-      severity: classified.severity, approval: Boolean(approval),
+      severity: policy.level, policyVersion: POLICY_VERSION, approval: Boolean(approval),
       ownerAuthenticated: Boolean(ownerAuthenticated), result, metadata
     });
-    return { allowed: result === 'ALLOWED_PREPARE', executed: false, result, reason, auditId: entry.id, ...classified };
+    return { allowed: result === 'ALLOWED_PREPARE', executed: false, result, reason, auditId: entry.id, policy, ...classified };
   }
 }
 
