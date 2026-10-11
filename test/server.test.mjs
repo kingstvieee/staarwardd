@@ -109,10 +109,24 @@ test('server serves app, query URLs, media, and API', async t => {
   const contractData = await contract.json();
   assert.deepEqual(contractData.portals.map(item => item.name), ['Creativity', 'Work', 'Home', 'Well-being', 'Relationships', 'Events', 'Style']);
 
+  const integrations = await fetch(base + '/api/guardian/integrations');
+  assert.equal(integrations.status, 200);
+  const integrationData = await integrations.json();
+  assert.equal(integrationData.portals.find(item => item.name === 'Events').providerStatus, 'NOT_CONNECTED');
+  assert.equal(integrationData.portals.find(item => item.name === 'Events').executionMode, 'PREPARE_ONLY');
+
   const alias = await fetch(base + '/api/guardian/resolve-portal', {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ portal: 'Community' })
   });
   assert.deepEqual(await alias.json(), { canonical: 'Events', alias: 'community' });
+
+  const preparedPortalAction = await fetch(base + '/api/guardian/portal-action', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ portal: 'Community', capability: 'compare_options' })
+  });
+  const preparedPortalActionData = await preparedPortalAction.json();
+  assert.equal(preparedPortalActionData.portal, 'Events');
+  assert.equal(preparedPortalActionData.providerStatus, 'NOT_CONNECTED');
+  assert.equal(preparedPortalActionData.executed, false);
 
   const denied = await fetch(base + '/api/guardian/authorize', {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'send_message', ownerAuthenticated: true, approval: true })

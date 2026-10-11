@@ -1,4 +1,5 @@
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
+import { PersistentAuditStore } from './guardian-persistence.mjs';
 
 export const CANONICAL_PORTALS = Object.freeze([
   'Creativity',
@@ -47,6 +48,27 @@ export function portalContract() {
   }));
 }
 
+const PORTAL_INTEGRATIONS = Object.freeze({
+  Creativity: ['draft_asset', 'review_rights', 'prepare_release'],
+  Work: ['prepare_brief', 'summarize_context', 'draft_update'],
+  Home: ['prepare_routine', 'inspect_local_state'],
+  'Well-being': ['private_check_in', 'prepare_recovery_routine'],
+  Relationships: ['draft_message', 'prepare_commitment'],
+  Events: ['compare_options', 'prepare_registration'],
+  Style: ['prepare_look', 'review_wardrobe']
+});
+
+export function portalIntegrationContract() {
+  return CANONICAL_PORTALS.map((name) => ({
+    name,
+    aliases: portalContract().find((portal) => portal.name === name)?.aliases || [],
+    providerStatus: 'NOT_CONNECTED',
+    executionMode: 'PREPARE_ONLY',
+    approvalRequired: true,
+    capabilities: [...PORTAL_INTEGRATIONS[name]]
+  }));
+}
+
 const EXTERNAL_ACTIONS = new Set([
   'send_message', 'publish', 'book', 'purchase', 'device_change', 'delete', 'share', 'memory_export'
 ]);
@@ -68,19 +90,28 @@ export class AuditLedger {
   #events = [];
   #previous = 'GENESIS';
   #maxEntries;
+  #store;
 
-  constructor({ maxEntries = 500 } = {}) { this.#maxEntries = maxEntries; }
+  constructor({ maxEntries = 500, store = null } = {}) {
+    this.#maxEntries = maxEntries;
+    this.#store = store;
+    if (store) {
+      this.#events = store.load();
+      if (!this.verify()) throw new Error('Persistent audit chain failed integrity verification');
+      this.#previous = this.#events.at(-1)?.hash || 'GENESIS';
+    }
+  }
 
   append(event) {
     const body = { id: randomUUID(), at: new Date().toISOString(), ...event };
     const entry = { ...body, previous: this.#previous, hash: digest(this.#previous, body) };
     this.#previous = entry.hash;
     this.#events.push(entry);
-    if (this.#events.length > this.#maxEntries) this.#events.shift();
+    if (this.#store) this.#store.append(entry);
     return entry;
   }
 
-  list() { return this.#events.map((entry) => ({ ...entry })); }
+  list() { return this.#events.slice(-this.#maxEntries).map((entry) => ({ ...entry })); }
 
   verify() {
     let previous = 'GENESIS';
@@ -136,13 +167,21 @@ export class CompletionContract {
   #tasks = new Map();
   #ledger;
 
-  constructor({ ledger = new AuditLedger() } = {}) { this.#ledger = ledger; }
+  constructor({ ledger = new AuditLedger() } = {}) {
+    this.#ledger = ledger;
+    for (const event of ledger.list()) {
+      if (event.type === 'TASK_CREATED' && event.task) this.#tasks.set(event.task.id, { ...event.task, criteria: [...event.task.criteria], evidence: [...event.task.evidence] });
+      if (event.type === 'TASK_EVIDENCE_ADDED' && this.#tasks.has(event.taskId)) { this.#tasks.get(event.taskId).evidence.push(event.evidence); this.#tasks.get(event.taskId).status = event.status; }
+      if (event.type === 'TASK_VERIFIED' && this.#tasks.has(event.taskId)) this.#tasks.get(event.taskId).status = event.status;
+      if (event.type === 'TASK_ACCEPTED' && this.#tasks.has(event.taskId)) this.#tasks.get(event.taskId).status = event.status;
+    }
+  }
 
   create({ title, criteria = [], owner = 'owner' } = {}) {
     const task = { id: `task-${randomUUID()}`, title: String(title || '').trim().slice(0, 240), criteria: [...new Set(criteria.map(String))], evidence: [], status: 'PLANNED', owner };
     if (!task.title) throw new Error('Task title is required');
     this.#tasks.set(task.id, task);
-    this.#ledger.append({ type: 'TASK_CREATED', taskId: task.id, status: task.status });
+    this.#ledger.append({ type: 'TASK_CREATED', taskId: task.id, status: task.status, task: { ...task, criteria: [...task.criteria], evidence: [] } });
     return { ...task, criteria: [...task.criteria], evidence: [] };
   }
 
@@ -153,7 +192,7 @@ export class CompletionContract {
     if (!item) throw new Error('Evidence is required');
     task.evidence.push(item);
     task.status = 'IMPLEMENTED_UNVERIFIED';
-    this.#ledger.append({ type: 'TASK_EVIDENCE_ADDED', taskId, status: task.status });
+    this.#ledger.append({ type: 'TASK_EVIDENCE_ADDED', taskId, status: task.status, evidence: item });
     return { ...task, criteria: [...task.criteria], evidence: [...task.evidence] };
   }
 
@@ -180,6 +219,6 @@ export class CompletionContract {
   }
 }
 
-export const guardianLedger = new AuditLedger();
+export const guardianLedger = new AuditLedger({ store: new PersistentAuditStore() });
 export const guardianSafety = new SafetyController({ ledger: guardianLedger });
 export const guardianCompletion = new CompletionContract({ ledger: guardianLedger });

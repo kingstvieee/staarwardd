@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { AuditLedger, CompletionContract, SafetyController, isOwnerTokenValid, portalContract, resolvePortal } from '../guardian-core.mjs';
+import { PersistentAuditStore } from '../guardian-persistence.mjs';
 
 test('portal migration preserves Community and Wellbeing as backward-compatible aliases', () => {
   assert.deepEqual(resolvePortal('Community'), { canonical: 'Events', alias: 'community' });
@@ -12,6 +16,41 @@ test('owner token validation is explicit and constant-time compatible', () => {
   assert.equal(isOwnerTokenValid('Bearer owner-secret', 'owner-secret'), true);
   assert.equal(isOwnerTokenValid('Bearer wrong', 'owner-secret'), false);
   assert.equal(isOwnerTokenValid('Bearer owner-secret', ''), false);
+});
+
+test('persistent audit storage replays and rejects a tampered hash chain', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'staarwardd-audit-'));
+  const path = join(directory, 'audit.jsonl');
+  try {
+    const first = new AuditLedger({ store: new PersistentAuditStore(path) });
+    first.append({ type: 'TEST', result: 'A' });
+    first.append({ type: 'TEST', result: 'B' });
+    const replayed = new AuditLedger({ store: new PersistentAuditStore(path) });
+    assert.equal(replayed.list().length, 2);
+    assert.equal(replayed.verify(), true);
+    const tampered = readFileSync(path, 'utf8').replace('"result":"B"', '"result":"TAMPERED"');
+    writeFileSync(path, tampered);
+    assert.throws(() => new AuditLedger({ store: new PersistentAuditStore(path) }), /integrity verification/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('completion tasks replay from persisted receipts', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'staarwardd-task-'));
+  const path = join(directory, 'audit.jsonl');
+  try {
+    const firstLedger = new AuditLedger({ store: new PersistentAuditStore(path) });
+    const firstCompletion = new CompletionContract({ ledger: firstLedger });
+    const task = firstCompletion.create({ title: 'Persisted Milo task', criteria: ['output exists'] });
+    firstCompletion.addEvidence({ taskId: task.id, evidence: 'Output receipt exists' });
+    firstCompletion.verify({ taskId: task.id });
+    const replayedCompletion = new CompletionContract({ ledger: new AuditLedger({ store: new PersistentAuditStore(path) }) });
+    assert.equal(replayedCompletion.get(task.id).status, 'VERIFIED');
+    assert.deepEqual(replayedCompletion.get(task.id).evidence, ['Output receipt exists']);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('external actions are denied without explicit owner approval', () => {
