@@ -10,7 +10,7 @@ The Guardian Constitution policy layer adds L0–L5 severity decisions, deny-by-
 
 ## Verification
 
-- Full test suite: **19/19 passed**.
+- Full test suite: **21/21 passed**.
 - Syntax check: passed for `server.mjs` and `public/app.js`.
 - Diff check: passed.
 - Persistence tests cover replay and tamper rejection.

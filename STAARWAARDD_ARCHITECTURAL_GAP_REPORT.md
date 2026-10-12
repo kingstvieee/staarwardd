@@ -4,7 +4,7 @@
 
 The implementation is a validated prototype foundation on branch `manus-expanded-m1-safety-contracts`, latest commit `34ae803a141cfc5b1b09687e0e655aef69edf863`.
 
-Verification is green: **19/19 tests passed**, syntax checks passed, diff checks passed, and the branch is synchronized with GitHub. The existing cinematic Hub, portal behavior, assets, routes, approval copy, and deterministic planner remain preserved.
+Verification is green: **21/21 tests passed**, syntax checks passed, diff checks passed, and the branch is synchronized with GitHub. The existing cinematic Hub, portal behavior, assets, routes, approval copy, and deterministic planner remain preserved.
 
 ## What is still missing
 

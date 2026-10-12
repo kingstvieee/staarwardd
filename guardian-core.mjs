@@ -1,6 +1,8 @@
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { PersistentAuditStore } from './guardian-persistence.mjs';
 import { permissionDecision, POLICY_VERSION } from './guardian-policy.mjs';
+import { TrustKernel } from './guardian-trust-kernel.mjs';
+import { GuardianLoopEngine } from './guardian-loop-engine.mjs';
 
 export const CANONICAL_PORTALS = Object.freeze([
   'Creativity',
@@ -221,3 +223,5 @@ export class CompletionContract {
 export const guardianLedger = new AuditLedger({ store: new PersistentAuditStore() });
 export const guardianSafety = new SafetyController({ ledger: guardianLedger });
 export const guardianCompletion = new CompletionContract({ ledger: guardianLedger });
+export const guardianTrustKernel = new TrustKernel({ audit: guardianLedger });
+export const guardianLoopEngine = new GuardianLoopEngine({ kernel: guardianTrustKernel, audit: guardianLedger });

@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { AuditLedger, CompletionContract, SafetyController, isOwnerTokenValid, portalContract, resolvePortal } from '../guardian-core.mjs';
 import { PersistentAuditStore } from '../guardian-persistence.mjs';
 import { inspectUntrustedContent, permissionDecision } from '../guardian-policy.mjs';
+import { TrustKernel } from '../guardian-trust-kernel.mjs';
+import { GuardianLoopEngine } from '../guardian-loop-engine.mjs';
 
 test('portal migration preserves Community and Wellbeing as backward-compatible aliases', () => {
   assert.deepEqual(resolvePortal('Community'), { canonical: 'Events', alias: 'community' });
@@ -32,6 +34,40 @@ test('untrusted content cannot authorize tools or policy changes', () => {
   assert.equal(inspected.trusted, false);
   assert.equal(inspected.instructionsIgnored, true);
   assert.equal(inspected.toolCallsAllowed, false);
+});
+
+test('Trust Kernel enforces scoped grants, bounded autonomy, revocation, expiry, and Safe Mode', () => {
+  const kernel = new TrustKernel();
+  const grant = kernel.issueGrant({ subject: 'loop-1', resource: 'files', capability: 'create_draft', autonomyLevel: 'A1', maxRisk: 'green' });
+  assert.equal(kernel.authorize({ grantId: grant.grantId, subject: 'loop-1', resource: 'files', capability: 'create_draft', autonomyLevel: 'A1', risk: 'green' }).result, 'ALLOWED_SIMULATION');
+  assert.equal(kernel.authorize({ grantId: grant.grantId, subject: 'loop-2', resource: 'files', capability: 'create_draft' }).result, 'DENIED_SCOPE');
+  assert.equal(kernel.authorize({ grantId: grant.grantId, subject: 'loop-1', resource: 'files', capability: 'create_draft', autonomyLevel: 'A2' }).result, 'DENIED_AUTONOMY');
+  assert.equal(kernel.authorize({ grantId: grant.grantId, subject: 'loop-1', resource: 'files', capability: 'create_draft', metadata: { apiKey: 'raw-secret' } }).result, 'DENIED_CREDENTIAL_MATERIAL');
+  kernel.activateSafeMode();
+  assert.equal(kernel.authorize({ grantId: grant.grantId, subject: 'loop-1', resource: 'files', capability: 'create_draft' }).result, 'DENIED_SAFE_MODE');
+  kernel.deactivateSafeMode();
+  assert.equal(kernel.revokeGrant(grant.grantId).revoked, true);
+  assert.equal(kernel.authorize({ grantId: grant.grantId, subject: 'loop-1', resource: 'files', capability: 'create_draft' }).result, 'DENIED_GRANT');
+  const expired = kernel.issueGrant({ subject: 'loop-1', resource: 'calendar', capability: 'read', expiresAt: '2020-01-01T00:00:00.000Z' });
+  assert.equal(kernel.authorize({ grantId: expired.grantId, subject: 'loop-1', resource: 'calendar', capability: 'read' }).result, 'DENIED_GRANT');
+});
+
+test('Loop Engine is bounded, routes actions through Trust Kernel, and requires independent verification', () => {
+  const kernel = new TrustKernel();
+  const engine = new GuardianLoopEngine({ kernel });
+  const grant = kernel.issueGrant({ subject: 'loop-1', resource: 'files', capability: 'create_draft', autonomyLevel: 'A1', maxRisk: 'green' });
+  const run = engine.create({ objective: 'Prepare a draft', skill: { id: 'draft-skill', version: '1.0.0' }, criteria: ['draft_exists'], retryLimit: 1, lanes: 1 });
+  const laneId = run.lanes[0].laneId;
+  const incomplete = engine.run({ loopRunId: run.loopRunId, laneId, actions: [{ grantId: grant.grantId, subject: 'loop-1', resource: 'files', capability: 'create_draft' }], observed: {}, verification: { draft_exists: true } });
+  assert.equal(incomplete.state, 'running');
+  const completed = engine.run({ loopRunId: run.loopRunId, laneId, actions: [{ grantId: grant.grantId, subject: 'loop-1', resource: 'files', capability: 'create_draft' }], observed: { draft_exists: 'file-1' }, verification: { draft_exists: true } });
+  assert.equal(completed.state, 'completed_verified');
+  const blocked = engine.create({ objective: 'Blocked action', skill: 'skill', criteria: ['done'] });
+  const blockedResult = engine.run({ loopRunId: blocked.loopRunId, laneId: blocked.lanes[0].laneId, actions: [{ grantId: 'missing', subject: 'loop-1', resource: 'files', capability: 'delete' }] });
+  assert.equal(blockedResult.state, 'blocked_permission');
+  const safe = engine.create({ objective: 'Safe mode stop', skill: 'skill', criteria: ['done'] });
+  kernel.activateSafeMode();
+  assert.equal(engine.run({ loopRunId: safe.loopRunId, laneId: safe.lanes[0].laneId, actions: [{ grantId: grant.grantId, subject: 'loop-1', resource: 'files', capability: 'create_draft' }] }).state, 'stopped_safe_mode');
 });
 
 test('persistent audit storage replays and rejects a tampered hash chain', () => {
