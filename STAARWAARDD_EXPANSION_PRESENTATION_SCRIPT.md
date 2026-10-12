@@ -40,7 +40,7 @@ That separation matters for personal communication, publishing, purchases, home 
 
 ## Demonstrated evidence
 
-The current branch passes 19 automated tests. The suite covers portal alias migration, owner-token validation, risk severity, untrusted-content handling, audit replay, tamper rejection, completion reconstruction, lockdown, approval denial, existing planner behavior, HTTP contracts, portal integration status, and the existing seven-portal walkthrough.
+The current branch passes 21 automated tests. The suite covers portal alias migration, owner-token validation, risk severity, untrusted-content handling, Trust Kernel scope and Safe Mode, bounded loop verification, audit replay, tamper rejection, completion reconstruction, lockdown, approval denial, existing planner behavior, HTTP contracts, portal integration status, and the existing seven-portal walkthrough.
 
 The local branch is synchronized with GitHub at commit `34ae803a141cfc5b1b09687e0e655aef69edf863`. Production main has not been merged or deployed.
 
