@@ -22,15 +22,17 @@ async function jsonRequest(url, options = {}) {
   return { response, body };
 }
 
-test('Guardian M5 runtime exposes Mission, presence and production-trust capabilities', async () => {
+test('Guardian M6 runtime exposes Mission, trust and production-execution capabilities', async () => {
   await withRuntime(async (base) => {
     const { response, body } = await jsonRequest(`${base}/api/guardian/runtime`);
     assert.equal(response.status, 200);
-    assert.equal(body.runtime, 'M5_PRODUCTION_TRUST');
+    assert.equal(body.runtime, 'M6_PRODUCTION_EXECUTION');
     assert.equal(body.hud, true);
     assert.equal(body.missionEngine, true);
+    assert.equal(body.persistentMissionState, true);
     assert.equal(body.presenceRegistry, true);
     assert.equal(body.trustExpansion, true);
+    assert.equal(body.productionExecution, true);
     assert.equal(body.sessionIdentity, true);
     assert.equal(body.durableIdentity, true);
     assert.equal(body.connectorProvenance, true);
@@ -43,10 +45,11 @@ test('Guardian M5 runtime exposes Mission, presence and production-trust capabil
     assert.equal(body.safeRendering, true);
     assert.equal(body.ambientSurveillance, false);
     assert.equal(body.sensorsDefault, 'ASK');
+    assert.ok(Array.isArray(body.liveProviderAdapters));
   });
 });
 
-test('M5 trust status is truthful about configuration-dependent capabilities', async () => {
+test('M5 trust status remains truthful under the M6 wrapper', async () => {
   await withRuntime(async (base) => {
     const { response, body } = await jsonRequest(`${base}/api/guardian/trust/runtime`);
     assert.equal(response.status, 200);
@@ -55,6 +58,18 @@ test('M5 trust status is truthful about configuration-dependent capabilities', a
     assert.equal(body.guarantees.externalActionsUseIsolatedExecutor, true);
     assert.equal(typeof body.encryptedMemoryConfigured, 'boolean');
     assert.equal(typeof body.connectorAttestationConfigured, 'boolean');
+  });
+});
+
+test('M6 execution runtime exposes provider and safety readiness without claiming unavailable integrations', async () => {
+  await withRuntime(async (base) => {
+    const { response, body } = await jsonRequest(`${base}/api/guardian/execution/runtime`);
+    assert.equal(response.status, 200);
+    assert.equal(body.runtime, 'M6_PRODUCTION_EXECUTION');
+    assert.equal(body.guarantees.providerFailover, true);
+    assert.equal(body.guarantees.rawProviderToolsAuthorized, false);
+    assert.equal(body.guarantees.actionDryRunDefault, true);
+    assert.ok(body.providers.some((provider) => provider.providerId === 'sandbox' && provider.configured === true));
   });
 });
 

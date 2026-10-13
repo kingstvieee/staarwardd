@@ -6,10 +6,17 @@ export class GuardianIsolatedActionExecutor {
   #adapters = new Map();
   #audit;
   #authorize;
+  #isLockedDown;
 
-  constructor({ audit = null, authorize = null } = {}) {
+  constructor({ audit = null, authorize = null, isLockedDown = null } = {}) {
     this.#audit = audit;
     this.#authorize = typeof authorize === 'function' ? authorize : () => ({ allowed: false, reason: 'NO_AUTHORIZER' });
+    this.#isLockedDown = typeof isLockedDown === 'function' ? isLockedDown : () => false;
+  }
+
+  setLockdownCheck(check) {
+    if (typeof check !== 'function') throw new Error('Lockdown check must be a function');
+    this.#isLockedDown = check;
   }
 
   registerAdapter({ adapterId, capabilities = [], execute } = {}) {
@@ -18,9 +25,20 @@ export class GuardianIsolatedActionExecutor {
     return { adapterId: String(adapterId), capabilities: [...new Set(capabilities.map(String))] };
   }
 
+  listAdapters() {
+    return [...this.#adapters.values()].map((adapter) => ({ adapterId: adapter.adapterId, capabilities: [...adapter.capabilities] }));
+  }
+
   async request({ adapterId, capability, input = {}, risk = 'green', approval = false, ownerAuthenticated = false, dryRun = true, timeoutMs = 5000, context = {} } = {}) {
     if (!VALID_RISK.has(risk)) throw new Error('Invalid risk level');
     const requestId = `action-${randomUUID()}`;
+
+    if (this.#isLockedDown()) {
+      const denied = { requestId, executed: false, allowed: false, reason: 'GUARDIAN_LOCKDOWN_ACTIVE' };
+      this.#audit?.append({ type: 'ACTION_DENIED', requestId, adapterId, capability, risk, reason: denied.reason });
+      return denied;
+    }
+
     const adapter = this.#adapters.get(String(adapterId));
     if (!adapter || !adapter.capabilities.has(String(capability))) {
       const denied = { requestId, executed: false, allowed: false, reason: 'ADAPTER_OR_CAPABILITY_UNAVAILABLE' };

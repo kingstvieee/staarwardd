@@ -12,29 +12,29 @@ export const MISSION_STATUSES = Object.freeze([
 
 export const CRITERION_STATES = Object.freeze(['PENDING', 'PASSED', 'FAILED']);
 
-function clone(value) {
-  return structuredClone(value);
-}
+function clone(value) { return structuredClone(value); }
+function now() { return new Date().toISOString(); }
+function normalizeText(value, max = 1000) { return String(value || '').trim().slice(0, max); }
+function hashArtifact(input) { return createHash('sha256').update(JSON.stringify(input)).digest('hex'); }
 
-function now() {
-  return new Date().toISOString();
-}
-
-function normalizeText(value, max = 1000) {
-  return String(value || '').trim().slice(0, max);
-}
-
-function hashArtifact(input) {
-  return createHash('sha256').update(JSON.stringify(input)).digest('hex');
+function validateImportedMission(source) {
+  if (!source || typeof source !== 'object') throw new Error('Invalid imported Mission');
+  if (!String(source.id || '').startsWith('mission-')) throw new Error('Imported Mission id is invalid');
+  if (!MISSION_STATUSES.includes(source.status)) throw new Error('Imported Mission status is invalid');
+  if (!Array.isArray(source.criteria) || source.criteria.length === 0) throw new Error('Imported Mission criteria are required');
+  for (const criterion of source.criteria) {
+    if (!criterion?.id || !criterion?.text || !CRITERION_STATES.includes(criterion.state)) throw new Error('Imported Mission criterion is invalid');
+    if (!Array.isArray(criterion.evidenceIds)) throw new Error('Imported Mission evidence links are invalid');
+  }
+  if (!Array.isArray(source.evidence) || !Array.isArray(source.blockers)) throw new Error('Imported Mission collections are invalid');
+  return clone(source);
 }
 
 export class GuardianMissionEngine {
   #missions = new Map();
   #audit;
 
-  constructor({ audit = null } = {}) {
-    this.#audit = audit;
-  }
+  constructor({ audit = null } = {}) { this.#audit = audit; }
 
   #record(event) {
     if (this.#audit?.append) return this.#audit.append(event);
@@ -211,13 +211,23 @@ export class GuardianMissionEngine {
     return clone(mission);
   }
 
-  get(missionId) {
-    const mission = this.#missions.get(missionId);
-    return mission ? clone(mission) : null;
-  }
+  get(missionId) { const mission = this.#missions.get(missionId); return mission ? clone(mission) : null; }
+  list() { return [...this.#missions.values()].map(clone); }
 
-  list() {
-    return [...this.#missions.values()].map(clone);
+  exportState() { return { version: 1, exportedAt: now(), missions: this.list() }; }
+
+  importState(state, { replace = false } = {}) {
+    const source = Array.isArray(state) ? state : state?.missions;
+    if (!Array.isArray(source)) throw new Error('Mission state must contain a missions array');
+    if (replace) this.#missions.clear();
+    let imported = 0;
+    for (const item of source) {
+      const mission = validateImportedMission(item);
+      this.#missions.set(mission.id, mission);
+      imported += 1;
+    }
+    this.#record({ type: 'MISSION_STATE_IMPORTED', imported, replace: Boolean(replace) });
+    return { imported, total: this.#missions.size };
   }
 
   #require(missionId) {

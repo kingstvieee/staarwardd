@@ -2,14 +2,21 @@ import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { handleRequest as legacyHandleRequest } from './server.mjs';
 import { guardianLedger, isOwnerTokenValid } from './guardian-core.mjs';
+import { createGuardianAuditFanout } from './guardian-remote-audit.mjs';
 import { GuardianMissionEngine, createMiloAcceptancePilot } from './guardian-mission-engine.mjs';
+import { GuardianMissionStore } from './guardian-mission-store.mjs';
 import { GuardianPresenceRegistry } from './guardian-presence-contract.mjs';
 import { createGuardianTrustRuntime } from './guardian-trust-runtime.mjs';
+import { createGuardianExecutionRuntime } from './guardian-execution-runtime.mjs';
 
 const port = Number(process.env.PORT || 3000);
-export const guardianMissions = new GuardianMissionEngine({ audit: guardianLedger });
+export const guardianAudit = createGuardianAuditFanout({ localAudit: guardianLedger });
+export const guardianMissions = new GuardianMissionEngine({ audit: guardianAudit });
+export const guardianMissionStore = new GuardianMissionStore();
 export const guardianPresence = new GuardianPresenceRegistry();
-export const guardianTrust = createGuardianTrustRuntime({ audit: guardianLedger, ownerTokenValidator: isOwnerTokenValid });
+export const guardianTrust = createGuardianTrustRuntime({ audit: guardianAudit, ownerTokenValidator: isOwnerTokenValid });
+export const guardianExecution = createGuardianExecutionRuntime({ trust: guardianTrust, missions: guardianMissions, audit: guardianAudit, auditFanout: guardianAudit });
+let missionStateLoaded = false;
 
 function json(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -29,6 +36,17 @@ function bodyJson(req) {
     });
     req.on('error', reject);
   });
+}
+
+async function ensureMissionStateLoaded() {
+  if (missionStateLoaded) return;
+  const state = await guardianMissionStore.load();
+  guardianMissions.importState(state, { replace: true });
+  missionStateLoaded = true;
+}
+
+async function persistMissionState() {
+  return guardianMissionStore.save(guardianMissions.list());
 }
 
 function ownerRequired(req, res) {
@@ -55,21 +73,28 @@ function missionSummary(mission) {
   };
 }
 
-function ensureMiloPilot() {
+async function ensureMiloPilot() {
+  await ensureMissionStateLoaded();
   const existing = guardianMissions.list().find((mission) => mission.metadata?.pilot === true && mission.title === 'Milo Episode Completion Pilot');
-  return existing || createMiloAcceptancePilot(guardianMissions);
+  if (existing) return existing;
+  const created = createMiloAcceptancePilot(guardianMissions);
+  await persistMissionState();
+  return created;
 }
 
 async function handleRuntimeApi(req, res) {
   const path = String(req.url || '/').split('?')[0];
+  await ensureMissionStateLoaded();
 
   if (req.method === 'GET' && path === '/api/guardian/runtime') {
     return json(res, 200, {
-      runtime: 'M5_PRODUCTION_TRUST',
+      runtime: 'M6_PRODUCTION_EXECUTION',
       hud: true,
       missionEngine: true,
+      persistentMissionState: true,
       presenceRegistry: true,
       trustExpansion: true,
+      productionExecution: true,
       sessionIdentity: true,
       durableIdentity: true,
       connectorProvenance: true,
@@ -78,9 +103,12 @@ async function handleRuntimeApi(req, res) {
       encryptedMemory: Boolean(guardianTrust.encryptedMemory),
       providerBoundary: true,
       providerNeutralModelRouter: true,
+      liveProviderAdapters: guardianExecution.providers.list(),
       isolatedActionExecutor: true,
       securityEvidenceRegistry: true,
       crossDeviceRevocation: true,
+      signedCrossDeviceShutdown: Boolean(guardianExecution.shutdown),
+      remoteAuditConfigured: Boolean(guardianAudit.remote.configured),
       safeRendering: true,
       ownerAcceptanceRequired: true,
       sensorsDefault: 'ASK',
@@ -95,33 +123,37 @@ async function handleRuntimeApi(req, res) {
   }
 
   if (req.method === 'POST' && path === '/api/guardian/missions/milo-pilot') {
-    const mission = ensureMiloPilot();
+    const mission = await ensureMiloPilot();
     return json(res, 200, { mission });
   }
 
   if (req.method === 'POST' && path === '/api/guardian/missions') {
     const body = await bodyJson(req);
     try {
-      if (body.operation === 'create') return json(res, 201, { mission: guardianMissions.create(body) });
-      if (body.operation === 'start') return json(res, 200, { mission: guardianMissions.start(body.missionId) });
-      if (body.operation === 'evidence') return json(res, 200, { evidence: guardianMissions.addEvidence(body.missionId, body.evidence || body) });
-      if (body.operation === 'criterion') return json(res, 200, { criterion: guardianMissions.setCriterion(body.missionId, body.criterionId, body) });
-      if (body.operation === 'blocker') return json(res, 200, { blocker: guardianMissions.reportBlocker(body.missionId, body) });
-      if (body.operation === 'resolve-blocker') return json(res, 200, { blocker: guardianMissions.resolveBlocker(body.missionId, body.blockerId, body.note) });
-      if (body.operation === 'verify') return json(res, 200, { verification: guardianMissions.verify(body.missionId, body) });
-      if (body.operation === 'accept') {
+      let status = 200;
+      let payload;
+      let mutated = true;
+      if (body.operation === 'create') { status = 201; payload = { mission: guardianMissions.create(body) }; }
+      else if (body.operation === 'start') payload = { mission: guardianMissions.start(body.missionId) };
+      else if (body.operation === 'evidence') payload = { evidence: guardianMissions.addEvidence(body.missionId, body.evidence || body) };
+      else if (body.operation === 'criterion') payload = { criterion: guardianMissions.setCriterion(body.missionId, body.criterionId, body) };
+      else if (body.operation === 'blocker') payload = { blocker: guardianMissions.reportBlocker(body.missionId, body) };
+      else if (body.operation === 'resolve-blocker') payload = { blocker: guardianMissions.resolveBlocker(body.missionId, body.blockerId, body.note) };
+      else if (body.operation === 'verify') payload = { verification: guardianMissions.verify(body.missionId, body) };
+      else if (body.operation === 'accept') {
         if (!ownerRequired(req, res)) return;
-        return json(res, 200, { mission: guardianMissions.accept(body.missionId, { approved: body.approved === true, actor: 'owner' }) });
-      }
-      if (body.operation === 'cancel') {
+        payload = { mission: guardianMissions.accept(body.missionId, { approved: body.approved === true, actor: 'owner' }) };
+      } else if (body.operation === 'cancel') {
         if (!ownerRequired(req, res)) return;
-        return json(res, 200, { mission: guardianMissions.cancel(body.missionId, body.reason) });
-      }
-      if (body.operation === 'get') {
+        payload = { mission: guardianMissions.cancel(body.missionId, body.reason) };
+      } else if (body.operation === 'get') {
+        mutated = false;
         const mission = guardianMissions.get(body.missionId);
-        return mission ? json(res, 200, { mission }) : json(res, 404, { error: 'Mission not found' });
-      }
-      return json(res, 400, { error: 'Unknown mission operation' });
+        if (!mission) return json(res, 404, { error: 'Mission not found' });
+        payload = { mission };
+      } else return json(res, 400, { error: 'Unknown mission operation' });
+      if (mutated) await persistMissionState();
+      return json(res, status, payload);
     } catch (error) {
       return json(res, 400, { error: error.message });
     }
@@ -156,6 +188,11 @@ async function handleRuntimeApi(req, res) {
 
 export async function handleRequest(req, res) {
   try {
+    if (String(req.url || '').startsWith('/api/guardian/execution')) {
+      await ensureMissionStateLoaded();
+      const handled = await guardianExecution.handle(req, res);
+      if (handled !== false) return handled;
+    }
     if (String(req.url || '').startsWith('/api/guardian/trust')) {
       const handled = await guardianTrust.handle(req, res);
       if (handled !== false) return handled;
