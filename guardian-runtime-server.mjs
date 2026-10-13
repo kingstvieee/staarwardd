@@ -65,15 +65,22 @@ async function handleRuntimeApi(req, res) {
 
   if (req.method === 'GET' && path === '/api/guardian/runtime') {
     return json(res, 200, {
-      runtime: 'M4_TRUST_EXPANSION',
+      runtime: 'M5_PRODUCTION_TRUST',
       hud: true,
       missionEngine: true,
       presenceRegistry: true,
       trustExpansion: true,
       sessionIdentity: true,
+      durableIdentity: true,
       connectorProvenance: true,
+      signedConnectorAttestations: Boolean(guardianTrust.attestations),
       memoryQuarantine: true,
+      encryptedMemory: Boolean(guardianTrust.encryptedMemory),
       providerBoundary: true,
+      providerNeutralModelRouter: true,
+      isolatedActionExecutor: true,
+      securityEvidenceRegistry: true,
+      crossDeviceRevocation: true,
       safeRendering: true,
       ownerAcceptanceRequired: true,
       sensorsDefault: 'ASK',
