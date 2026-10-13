@@ -4,10 +4,12 @@ import { handleRequest as legacyHandleRequest } from './server.mjs';
 import { guardianLedger, isOwnerTokenValid } from './guardian-core.mjs';
 import { GuardianMissionEngine, createMiloAcceptancePilot } from './guardian-mission-engine.mjs';
 import { GuardianPresenceRegistry } from './guardian-presence-contract.mjs';
+import { createGuardianTrustRuntime } from './guardian-trust-runtime.mjs';
 
 const port = Number(process.env.PORT || 3000);
 export const guardianMissions = new GuardianMissionEngine({ audit: guardianLedger });
 export const guardianPresence = new GuardianPresenceRegistry();
+export const guardianTrust = createGuardianTrustRuntime({ audit: guardianLedger, ownerTokenValidator: isOwnerTokenValid });
 
 function json(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -30,8 +32,9 @@ function bodyJson(req) {
 }
 
 function ownerRequired(req, res) {
-  if (isOwnerTokenValid(req.headers.authorization)) return true;
-  json(res, 401, { error: 'Authenticated owner required' });
+  const auth = guardianTrust.authentication(req, 'strong');
+  if (auth.authenticated) return true;
+  json(res, 401, { error: 'Authenticated owner required', reason: auth.reason || 'UNAUTHENTICATED' });
   return false;
 }
 
@@ -62,10 +65,16 @@ async function handleRuntimeApi(req, res) {
 
   if (req.method === 'GET' && path === '/api/guardian/runtime') {
     return json(res, 200, {
-      runtime: 'M3_GUARDIAN_RUNTIME',
+      runtime: 'M4_TRUST_EXPANSION',
       hud: true,
       missionEngine: true,
       presenceRegistry: true,
+      trustExpansion: true,
+      sessionIdentity: true,
+      connectorProvenance: true,
+      memoryQuarantine: true,
+      providerBoundary: true,
+      safeRendering: true,
       ownerAcceptanceRequired: true,
       sensorsDefault: 'ASK',
       ambientSurveillance: false,
@@ -140,6 +149,10 @@ async function handleRuntimeApi(req, res) {
 
 export async function handleRequest(req, res) {
   try {
+    if (String(req.url || '').startsWith('/api/guardian/trust')) {
+      const handled = await guardianTrust.handle(req, res);
+      if (handled !== false) return handled;
+    }
     if (String(req.url || '').startsWith('/api/guardian/runtime') ||
         String(req.url || '').startsWith('/api/guardian/missions') ||
         String(req.url || '').startsWith('/api/guardian/presence')) {
