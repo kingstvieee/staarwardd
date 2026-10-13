@@ -14,6 +14,11 @@ export class GuardianIsolatedActionExecutor {
     this.#isLockedDown = typeof isLockedDown === 'function' ? isLockedDown : () => false;
   }
 
+  setLockdownCheck(check) {
+    if (typeof check !== 'function') throw new Error('Lockdown check must be a function');
+    this.#isLockedDown = check;
+  }
+
   registerAdapter({ adapterId, capabilities = [], execute } = {}) {
     if (!adapterId || typeof execute !== 'function') throw new Error('adapterId and execute are required');
     this.#adapters.set(String(adapterId), { adapterId: String(adapterId), capabilities: new Set(capabilities.map(String)), execute });
