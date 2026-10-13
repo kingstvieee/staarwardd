@@ -8,7 +8,7 @@
     "dev": "node guardian-runtime-server.mjs",
     "start": "node guardian-runtime-server.mjs",
     "test": "node --test test/*.test.mjs",
-    "check": "node --check server.mjs && node --check guardian-runtime-server.mjs && node --check guardian-mission-engine.mjs && node --check guardian-presence-contract.mjs && node --check public/app.js && node --check public/guardian-runtime.js"
+    "check": "node --check server.mjs && node --check guardian-runtime-server.mjs && node --check guardian-mission-engine.mjs && node --check guardian-presence-contract.mjs && node --check guardian-prompt-security.mjs && node --check guardian-policy.mjs && node --check public/app.js && node --check public/guardian-runtime.js"
   },
   "engines": { "node": ">=20" }
 }
