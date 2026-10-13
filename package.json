@@ -5,11 +5,10 @@
   "type": "module",
   "description": "StaarWardd — a human-centred life orchestration prototype",
   "scripts": {
-    "dev": "node server.mjs",
-    "start": "node server.mjs",
+    "dev": "node guardian-runtime-server.mjs",
+    "start": "node guardian-runtime-server.mjs",
     "test": "node --test test/*.test.mjs",
-    "check": "node --check server.mjs && node --check public/app.js"
+    "check": "node --check server.mjs && node --check guardian-runtime-server.mjs && node --check guardian-mission-engine.mjs && node --check guardian-presence-contract.mjs && node --check public/app.js && node --check public/guardian-runtime.js"
   },
   "engines": { "node": ">=20" }
 }
-
