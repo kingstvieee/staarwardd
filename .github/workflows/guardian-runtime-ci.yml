@@ -1,0 +1,39 @@
+name: Guardian Runtime CI
+
+on:
+  push:
+    branches:
+      - manus-expanded-m1-safety-contracts
+      - m4-trust-expansion
+      - m5-production-trust
+      - m6-production-execution
+  pull_request:
+    branches:
+      - main
+      - manus-expanded-m1-safety-contracts
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Syntax and runtime checks
+        run: npm run check
+      - name: Test Guardian contracts
+        run: npm test
+      - name: Run adversarial security probes
+        run: npm run security:probe
+      - name: Run accessibility audit
+        run: npm run accessibility:audit

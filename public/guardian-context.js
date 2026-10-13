@@ -16,6 +16,19 @@
     };
   }
 
+  function loadGuardianRuntime() {
+    if (!document.querySelector('link[data-guardian-runtime]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/guardian-runtime.css?v=m3-runtime-1';
+      link.dataset.guardianRuntime = 'true';
+      document.head.appendChild(link);
+    }
+    import('/guardian-runtime.js?v=m3-runtime-1').catch(function (error) {
+      console.error('Guardian Runtime failed to load', error);
+    });
+  }
+
   window.fetch = async function (input, init) {
     const url = typeof input === "string" ? input : (input && input.url) || "";
     if (url === "/api/plan" && init && typeof init.body === "string") {
@@ -57,5 +70,7 @@
       });
       observer.observe(workspace, {attributes:true,attributeFilter:["class"]});
     }
+
+    loadGuardianRuntime();
   });
 })();

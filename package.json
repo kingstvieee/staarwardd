@@ -5,11 +5,12 @@
   "type": "module",
   "description": "StaarWardd — a human-centred life orchestration prototype",
   "scripts": {
-    "dev": "node server.mjs",
-    "start": "node server.mjs",
-    "test": "node --test test/server.test.mjs",
-    "check": "node --check server.mjs && node --check public/app.js"
+    "dev": "node guardian-runtime-server.mjs",
+    "start": "node guardian-runtime-server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "security:probe": "node test/security-probe-runner.mjs",
+    "accessibility:audit": "node test/accessibility-audit.mjs",
+    "check": "node --check server.mjs && node --check guardian-runtime-server.mjs && node --check guardian-mission-engine.mjs && node --check guardian-mission-store.mjs && node --check guardian-presence-contract.mjs && node --check guardian-prompt-security.mjs && node --check guardian-policy.mjs && node --check guardian-session-identity.mjs && node --check guardian-connector-provenance.mjs && node --check guardian-memory-quarantine.mjs && node --check guardian-provider-boundary.mjs && node --check guardian-safe-render.mjs && node --check guardian-trust-runtime.mjs && node --check guardian-durable-identity.mjs && node --check guardian-device-revocation.mjs && node --check guardian-connector-attestation.mjs && node --check guardian-encrypted-memory-store.mjs && node --check guardian-model-router.mjs && node --check guardian-provider-adapters.mjs && node --check guardian-provider-orchestrator.mjs && node --check guardian-isolated-action-executor.mjs && node --check guardian-staging-action-adapters.mjs && node --check guardian-security-evidence.mjs && node --check guardian-observability.mjs && node --check guardian-signed-shutdown.mjs && node --check guardian-remote-audit.mjs && node --check guardian-execution-runtime.mjs && node --check public/app.js && node --check public/guardian-runtime.js"
   },
   "engines": { "node": ">=20" }
 }
-
