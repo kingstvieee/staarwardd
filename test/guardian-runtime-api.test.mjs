@@ -22,14 +22,20 @@ async function jsonRequest(url, options = {}) {
   return { response, body };
 }
 
-test('Guardian M3 runtime exposes Mission and presence capabilities', async () => {
+test('Guardian M4 runtime exposes Mission, presence and trust capabilities', async () => {
   await withRuntime(async (base) => {
     const { response, body } = await jsonRequest(`${base}/api/guardian/runtime`);
     assert.equal(response.status, 200);
-    assert.equal(body.runtime, 'M3_GUARDIAN_RUNTIME');
+    assert.equal(body.runtime, 'M4_TRUST_EXPANSION');
     assert.equal(body.hud, true);
     assert.equal(body.missionEngine, true);
     assert.equal(body.presenceRegistry, true);
+    assert.equal(body.trustExpansion, true);
+    assert.equal(body.sessionIdentity, true);
+    assert.equal(body.connectorProvenance, true);
+    assert.equal(body.memoryQuarantine, true);
+    assert.equal(body.providerBoundary, true);
+    assert.equal(body.safeRendering, true);
     assert.equal(body.ambientSurveillance, false);
     assert.equal(body.sensorsDefault, 'ASK');
   });

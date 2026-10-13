@@ -164,7 +164,7 @@ export function inspectPromptSecurity(content, {
   sourceId = null
 } = {}) {
   const normalized = normalizePromptSecurityText(content);
-  const composite = normalizePromptSecurityText([...priorFragments, normalized].join('\n'));
+  const composite = normalizePromptSecurityText([...priorFragments, normalized].join(' '));
   const decodedPercent = decodePercentOnce(composite);
   const decodedBase64 = decodeBase64Candidates(composite);
 

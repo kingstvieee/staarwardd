@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - manus-expanded-m1-safety-contracts
+      - m4-trust-expansion
   pull_request:
     branches:
       - main
+      - manus-expanded-m1-safety-contracts
 
 permissions:
   contents: read
