@@ -1,3 +1,5 @@
+import { externalContentEnvelope, inspectPromptSecurity, PROMPT_SECURITY_REGIME_VERSION } from './guardian-prompt-security.mjs';
+
 export const POLICY_VERSION = 'guardian-constitution-v1';
 
 export const SEVERITY_LEVELS = Object.freeze({
@@ -26,13 +28,28 @@ export function permissionDecision({ action, ownerAuthenticated = false, approva
   return { action: normalized, ...policy, result, executed: false, policyVersion: POLICY_VERSION };
 }
 
-export function inspectUntrustedContent(content) {
-  const text = String(content || '').slice(0, 10000);
+export function inspectUntrustedContent(content, context = {}) {
+  const source = context.source || 'external';
+  const sourceId = context.sourceId || null;
+  const priorFragments = Array.isArray(context.priorFragments) ? context.priorFragments : [];
+  const envelope = externalContentEnvelope({ content, source, sourceId, priorFragments });
   return {
     trusted: false,
     instructionsIgnored: true,
     toolCallsAllowed: false,
-    text,
-    reason: 'External content is data only and cannot change Guardian policy or authorize actions.'
+    memoryWritesAllowed: false,
+    externalActionsAllowed: false,
+    text: envelope.content,
+    promptSecurityRegime: PROMPT_SECURITY_REGIME_VERSION,
+    security: envelope.inspection,
+    reason: 'External content is data only. It cannot change Guardian policy, authorize tools, write memory, or trigger external actions.'
   };
+}
+
+export function inspectUserPrompt(content, context = {}) {
+  return inspectPromptSecurity(content, {
+    source: context.source || 'user',
+    sourceId: context.sourceId || null,
+    priorFragments: Array.isArray(context.priorFragments) ? context.priorFragments : []
+  });
 }
