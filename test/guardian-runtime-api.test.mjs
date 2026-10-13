@@ -22,22 +22,39 @@ async function jsonRequest(url, options = {}) {
   return { response, body };
 }
 
-test('Guardian M4 runtime exposes Mission, presence and trust capabilities', async () => {
+test('Guardian M5 runtime exposes Mission, presence and production-trust capabilities', async () => {
   await withRuntime(async (base) => {
     const { response, body } = await jsonRequest(`${base}/api/guardian/runtime`);
     assert.equal(response.status, 200);
-    assert.equal(body.runtime, 'M4_TRUST_EXPANSION');
+    assert.equal(body.runtime, 'M5_PRODUCTION_TRUST');
     assert.equal(body.hud, true);
     assert.equal(body.missionEngine, true);
     assert.equal(body.presenceRegistry, true);
     assert.equal(body.trustExpansion, true);
     assert.equal(body.sessionIdentity, true);
+    assert.equal(body.durableIdentity, true);
     assert.equal(body.connectorProvenance, true);
     assert.equal(body.memoryQuarantine, true);
     assert.equal(body.providerBoundary, true);
+    assert.equal(body.providerNeutralModelRouter, true);
+    assert.equal(body.isolatedActionExecutor, true);
+    assert.equal(body.securityEvidenceRegistry, true);
+    assert.equal(body.crossDeviceRevocation, true);
     assert.equal(body.safeRendering, true);
     assert.equal(body.ambientSurveillance, false);
     assert.equal(body.sensorsDefault, 'ASK');
+  });
+});
+
+test('M5 trust status is truthful about configuration-dependent capabilities', async () => {
+  await withRuntime(async (base) => {
+    const { response, body } = await jsonRequest(`${base}/api/guardian/trust/runtime`);
+    assert.equal(response.status, 200);
+    assert.equal(body.runtime, 'M5_PRODUCTION_TRUST');
+    assert.equal(body.guarantees.modelRoutingIsProviderNeutral, true);
+    assert.equal(body.guarantees.externalActionsUseIsolatedExecutor, true);
+    assert.equal(typeof body.encryptedMemoryConfigured, 'boolean');
+    assert.equal(typeof body.connectorAttestationConfigured, 'boolean');
   });
 });
 
