@@ -18,7 +18,7 @@ export function verifyRecoveryCommand(command, { publicKey, now = Date.now(), ex
   }
   let key, bytes;
   try {
-    key = createPublicKey(publicKey);
+    key = publicKey?.type === 'public' ? publicKey : createPublicKey(publicKey);
     if (key.asymmetricKeyType !== 'ed25519') return { valid: false, reason: 'unsupported_key' };
     if (!/^[A-Za-z0-9_-]{86}$/.test(signature)) return { valid: false, reason: 'invalid_signature_encoding' };
     bytes = Buffer.from(signature.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
