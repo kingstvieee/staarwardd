@@ -1,0 +1,15 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { Sentinel, MODES } from '../sentinel/policy.mjs';
+test('defaults to lockdown',()=>assert.equal(new Sentinel().status.mode,MODES.LOCKDOWN));
+test('lockdown rejects read',()=>assert.equal(new Sentinel().authorize({action:'read',principal:'owner',scopes:['read']}).allowed,false));
+test('untrusted actor cannot recover',()=>assert.throws(()=>new Sentinel().transition(MODES.NORMAL,{actor:'guardian',verified:true}),/Independent/));
+test('independent verified owner can recover',()=>assert.equal(new Sentinel().transition(MODES.NORMAL,{actor:'independent_owner',verified:true}).mode,MODES.NORMAL));
+test('missing scope denied',()=>{const s=new Sentinel({initialMode:MODES.NORMAL});assert.equal(s.authorize({action:'read',principal:'owner'}).allowed,false)});
+test('high-risk requires approval and step-up',()=>{const s=new Sentinel({initialMode:MODES.NORMAL});assert.equal(s.authorize({action:'payment.create',principal:'owner',scopes:['payment.create'],approved:true}).allowed,false)});
+test('high-risk approved with step-up in normal mode',()=>{const s=new Sentinel({initialMode:MODES.NORMAL});assert.equal(s.authorize({action:'payment.create',principal:'owner',scopes:['payment.create'],approved:true,stepUp:true}).allowed,true)});
+test('caution denies high-risk',()=>{const s=new Sentinel({initialMode:MODES.CAUTION});assert.equal(s.authorize({action:'device.actuate',principal:'owner',scopes:['device.actuate'],approved:true,stepUp:true}).allowed,false)});
+test('containment allows only scoped read',()=>{const s=new Sentinel({initialMode:MODES.CONTAIN});assert.equal(s.authorize({action:'plan',principal:'owner',scopes:['plan']}).allowed,false);assert.equal(s.authorize({action:'read',principal:'owner',scopes:['read']}).allowed,true)});
+test('offline denies external actions',()=>{const s=new Sentinel({initialMode:MODES.NORMAL});assert.equal(s.authorize({action:'message.send',principal:'owner',scopes:['message.send'],approved:true,stepUp:true,online:false}).allowed,false)});
+test('unknown action fails closed',()=>assert.equal(new Sentinel({initialMode:MODES.NORMAL}).authorize({action:'wildcard',principal:'owner',scopes:['wildcard']}).allowed,false));
+test('transition emits audit event',()=>{const s=new Sentinel();s.transition(MODES.CONTAIN,{actor:'independent_owner',verified:true});assert.equal(s.events().length,1);assert.equal(s.events()[0].digest.length,64)});
