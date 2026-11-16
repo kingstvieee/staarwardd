@@ -7,9 +7,10 @@
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
-    "test": "node --test test/server.test.mjs",
-    "check": "node --check server.mjs && node --check public/app.js"
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check server.mjs && node --check public/app.js && node --check sentinel/policy.mjs && node --check sentinel/gateway.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
-
