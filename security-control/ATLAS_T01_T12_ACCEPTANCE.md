@@ -38,4 +38,4 @@ case definitions below are engineering interpretations, not quotations from the 
 - Private schema anon/authenticated access denied.
 - Atomic challenge consumption first=true, replay=false (transaction rolled back).
 - Expired, wrong revision, wrong owner challenges all denied (transaction rolled back).
-- GitHub StarCenttinel foundation CI passed at baf055f; newer branch CI unverified.\n- Live private database audit UPDATE and DELETE attempts rejected in rolled-back transactions; evidence preserved in query results.\n- Guardian integration commit 9f5fa7a passed four GitHub CI workflows.
+- GitHub StarCenttinel foundation CI passed at baf055f; newer branch CI unverified.\n- Live private database audit UPDATE and DELETE attempts rejected in rolled-back transactions; evidence preserved in query results.\n- Guardian integration commit 9f5fa7a passed four GitHub CI workflows.\n- Guardian integration commit 5f97691 passed all four GitHub workflows, including dedicated seven-portal structural tests.\n- Provider revocation table rejected a synthetic unverified PROVIDER_CONFIRMED record in a rolled-back SQL test; no live provider was contacted.
