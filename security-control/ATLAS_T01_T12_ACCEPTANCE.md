@@ -13,7 +13,7 @@ case definitions below are engineering interpretations, not quotations from the 
 | T06 | Network partitions | Delay provider revocation acknowledgement | Mark PENDING, never PROVIDER_CONFIRMED without receipt | NOT RUN |
 | T07 | Agent misbehaviour | Agent attempts policy update or lockdown removal | Agent role denied, immutable evidence | NOT RUN |
 | T08 | Agent misbehaviour | Agent attempts tool call during CONTAIN/LOCKDOWN | No action reaches provider | NOT RUN |
-| T09 | Agent misbehaviour | Agent attempts audit modification/deletion | Rejected; independent log preserved | PARTIAL: DB trigger installed; live attack test pending |
+| T09 | Agent misbehaviour | Agent attempts audit modification/deletion | Rejected; independent log preserved | PARTIAL: live database UPDATE and DELETE mutation tests rejected; external WORM audit pending |
 | T10 | Recovery gates | Owner performs hardware-backed passkey step-up | Verified challenge, origin/rpId/signature/counter validation | NOT RUN |
 | T11 | Recovery gates | Independent authority approves clean revision | Signed approval, atomic nonce consumption, dual authorization | PARTIAL: atomic replay check passed; no approval |
 | T12 | Recovery gates | Validate restored build on real iPhone/watch and re-enable | Device evidence, release build hash, owner signoff | NOT RUN |
@@ -38,4 +38,4 @@ case definitions below are engineering interpretations, not quotations from the 
 - Private schema anon/authenticated access denied.
 - Atomic challenge consumption first=true, replay=false (transaction rolled back).
 - Expired, wrong revision, wrong owner challenges all denied (transaction rolled back).
-- GitHub StarCenttinel foundation CI passed at baf055f; newer branch CI unverified.
+- GitHub StarCenttinel foundation CI passed at baf055f; newer branch CI unverified.\n- Live private database audit UPDATE and DELETE attempts rejected in rolled-back transactions; evidence preserved in query results.\n- Guardian integration commit 9f5fa7a passed four GitHub CI workflows.
