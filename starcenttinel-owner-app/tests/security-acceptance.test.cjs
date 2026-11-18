@@ -1,0 +1,11 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const src = fs.readFileSync('src/securityAcceptance.js','utf8').replaceAll('export const ','const ').replaceAll('export function ','function ');
+const api = new Function(`${src};return {GUARDIAN_PORTALS,REQUIRED_CASES,evaluatePortalEvidence,allPortalsVerified,OWNER_GATES,emergencyControlsEnabled};`)();
+test('all seven Guardian portal IDs are distinct',()=>assert.equal(new Set(api.GUARDIAN_PORTALS).size,7));
+test('empty evidence verifies zero portals',()=>assert.equal(Object.values(api.evaluatePortalEvidence({})).filter(x=>x.verified).length,0));
+test('each portal requires eight cases',()=>assert.equal(api.evaluatePortalEvidence({}).work.total,8));
+test('all-pass synthetic evidence passes matrix only',()=>{const e=Object.fromEntries(api.GUARDIAN_PORTALS.map(p=>[p,Object.fromEntries(api.REQUIRED_CASES.map(c=>[c,'PASS']))])); assert.equal(api.allPortalsVerified(e),true); assert.equal(api.emergencyControlsEnabled(api.OWNER_GATES,e),false);});
+test('single missing or failed case blocks portal',()=>{const e=Object.fromEntries(api.GUARDIAN_PORTALS.map(p=>[p,Object.fromEntries(api.REQUIRED_CASES.map(c=>[c,'PASS']))]));e.work.authority_offline='FAIL';assert.equal(api.allPortalsVerified(e),false);});
+test('even synthetic completed gates cannot enable with missing portal evidence',()=>assert.equal(api.emergencyControlsEnabled(Object.fromEntries(Object.keys(api.OWNER_GATES).map(k=>[k,true])),{}),false));

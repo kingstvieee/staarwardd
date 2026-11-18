@@ -1,0 +1,10 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const api = fs.readFileSync('src/ownerApi.js','utf8');
+const app = fs.readFileSync('App.js','utf8');
+test('owner API requests are bounded by timeout',()=>{assert.match(api,/AbortController/);assert.match(api,/REQUEST_TIMEOUT_MS = 10000/);});
+test('server NORMAL mode requires independent authority',()=>assert.match(api,/data.mode === 'NORMAL' && data.external_authority_verified !== true/));
+test('audit array and revision are validated',()=>{assert.match(api,/Array.isArray\(data.audit\)/);assert.match(api,/data.revision < 0/);});
+test('session switches clear previous owner status',()=>assert.match(app,/onAuthenticated=\{token => \{ setStatus\(null\)/));
+test('session rejection clears status before returning to login',()=>assert.match(app,/SESSION_EXPIRED'\) \{ setStatus\(null\)/));

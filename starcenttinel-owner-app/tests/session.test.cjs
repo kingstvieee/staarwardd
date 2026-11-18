@@ -1,0 +1,10 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const api = fs.readFileSync('src/ownerApi.js','utf8');
+const app = fs.readFileSync('App.js','utf8');
+const status = fs.readFileSync('src/status.js','utf8');
+test('expired or forbidden owner sessions fail closed',()=>{assert.match(api,/r.status === 401 \|\| r.status === 403/);assert.match(app,/setSessionToken\(null\)/);});
+test('stale responses are rejected',()=>assert.match(api,/Stale security response/));
+test('owner email gate is not asserted before verified sign-in',()=>assert.match(status,/Owner email confirmed', done: false/));
+test('emergency controls remain off',()=>assert.match(status,/LIVE_CONTROLS_ENABLED = false/));

@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "StarCenttinel Owner",
+    "slug": "starcenttinel-owner",
+    "scheme": "starcenttinel",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#06080c",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ca.staarwaardd.starcenttinel.owner",
+      "buildNumber": "10"
+    },
+    "android": {
+      "package": "ca.staarwaardd.starcenttinel.owner",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#06080c"
+      },
+      "versionCode": 10
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ]
+    ],
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
+    "owner": "staarwarddceos-team",
+    "extra": {
+      "eas": {
+        "projectId": "2def0883-2242-47b7-a7dc-0a75fa407a25"
+      }
+    }
+  }
+}
