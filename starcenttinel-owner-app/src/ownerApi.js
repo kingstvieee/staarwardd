@@ -9,18 +9,56 @@ async function authFetch(url, options) {
   try { return await fetch(url, { ...options, signal: controller.signal }); }
   finally { clearTimeout(timer); }
 }
-export async function requestEmailCode(email) {
+export const OWNER_CALLBACK = 'starcenttinel://auth/callback';
+export async function requestMagicLink(email) {
   if (!configured() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Error('Invalid owner email or configuration');
-  const r = await authFetch(`${BASE}/auth/v1/otp`, { method: 'POST', headers: headers(), body: JSON.stringify({ email, create_user: false }) });
-  if (!r.ok) throw Error('Unable to request owner code');
+  const r = await authFetch(`${BASE}/auth/v1/otp`, {
+    method: 'POST', headers: headers(),
+    body: JSON.stringify({ email, create_user: false }),
+  });
+  if (!r.ok) throw Error(`Unable to request sign-in link (${r.status})`);
 }
-export async function verifyEmailCode(email, token) {
-  if (!configured() || !/^\d{6,8}$/.test(token)) throw Error('Invalid email verification code');
-  const r = await authFetch(`${BASE}/auth/v1/verify`, { method: 'POST', headers: headers(), body: JSON.stringify({ email, token, type: 'email' }) });
-  if (!r.ok) throw Error('Owner verification failed');
-  const result = await r.json();
-  if (!result.access_token) throw Error('No owner session');
-  return result.access_token;
+// Domain-free fallback: verify a *copied* Supabase email link directly instead of
+// visiting its default localhost redirect. The one-time token is sent only to
+// this same project's Auth verification endpoint; no website is involved.
+export async function exchangeCopiedEmailLink(rawLink) {
+  if (!configured()) throw Error('Authentication not configured');
+  const link = new URL(String(rawLink || '').trim());
+  if (link.origin !== BASE || link.pathname !== '/auth/v1/verify') throw Error('Not a StarCenttinel authentication link');
+  const type = link.searchParams.get('type');
+  if (type !== 'magiclink' && type !== 'email') throw Error('Unsupported sign-in link type');
+  const tokenHash = link.searchParams.get('token_hash') || link.searchParams.get('token');
+  if (!tokenHash || !/^[A-Za-z0-9_-]{20,256}$/.test(tokenHash)) throw Error('Invalid sign-in link token');
+  const r = await authFetch(`${BASE}/auth/v1/verify`, {
+    method: 'POST', headers: headers(),
+    body: JSON.stringify({ token_hash: tokenHash, type }),
+  });
+  if (!r.ok) throw Error('Sign-in link invalid, already used, or expired');
+  const data = await r.json();
+  if (!data.access_token) throw Error('Missing verified owner session');
+  return data.access_token;
+}
+export async function exchangeMagicLink(url) {
+  if (typeof url !== 'string' || !url.startsWith(OWNER_CALLBACK)) throw Error('Invalid owner callback');
+  const fragment = url.split('#')[1] || '';
+  const query = url.split('?')[1]?.split('#')[0] || '';
+  const params = new URLSearchParams(fragment || query);
+  if (params.has('error') || params.has('error_code')) throw Error('Sign-in link expired or rejected');
+  const tokenHash = params.get('token_hash');
+  if (tokenHash) {
+    const r = await authFetch(`${BASE}/auth/v1/verify`, {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ token_hash: tokenHash, type: 'email' }),
+    });
+    if (!r.ok) throw Error('Owner link verification failed');
+    const data = await r.json();
+    if (!data.access_token) throw Error('Missing owner session');
+    return data.access_token;
+  }
+  // Supabase's hosted /verify endpoint can redirect with a session in the fragment.
+  const accessToken = params.get('access_token');
+  if (!accessToken || params.get('token_type') !== 'bearer') throw Error('Missing verified owner session');
+  return accessToken;
 }
 const REQUEST_TIMEOUT_MS = 10000;
 export async function readOwnerStatus(token) {
