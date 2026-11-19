@@ -10,13 +10,25 @@ async function authFetch(url, options) {
   finally { clearTimeout(timer); }
 }
 export const OWNER_CALLBACK = 'starcenttinel://auth/callback';
-export async function requestMagicLink(email) {
+export async function requestEmailCode(email) {
   if (!configured() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Error('Invalid owner email or configuration');
   const r = await authFetch(`${BASE}/auth/v1/otp`, {
     method: 'POST', headers: headers(),
     body: JSON.stringify({ email, create_user: false }),
   });
-  if (!r.ok) throw Error(`Unable to request sign-in link (${r.status})`);
+  if (!r.ok) throw Error(`Unable to request email code (${r.status})`);
+}
+export async function verifyEmailCode(email, code) {
+  if (!configured() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Error('Invalid owner email');
+  if (!/^\d{6}$/.test(String(code || ''))) throw Error('Enter the six-digit code');
+  const r = await authFetch(`${BASE}/auth/v1/verify`, {
+    method: 'POST', headers: headers(),
+    body: JSON.stringify({ email, token: String(code), type: 'email' }),
+  });
+  if (!r.ok) throw Error('Invalid or expired verification code');
+  const data = await r.json();
+  if (!data.access_token) throw Error('Missing verified owner session');
+  return data.access_token;
 }
 // Domain-free fallback: verify a *copied* Supabase email link directly instead of
 // visiting its default localhost redirect. The one-time token is sent only to
