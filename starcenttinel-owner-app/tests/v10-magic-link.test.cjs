@@ -19,7 +19,7 @@ test('request uses built-in Supabase email without an unapproved redirect', asyn
   const calls=[]; const old=global.fetch;
   try {
     global.fetch=async(u,o)=>{calls.push({u,o}); return {ok:true,status:200};};
-    await api.requestMagicLink('owner@example.com');
+    await api.requestEmailCode('owner@example.com');
     assert.equal(calls.length,1);
     assert.equal(calls[0].u, 'https://khpprzhqovzhgxdltarq.supabase.co/auth/v1/otp');
     assert.deepEqual(JSON.parse(calls[0].o.body),{email:'owner@example.com',create_user:false});
@@ -52,4 +52,20 @@ test('bad token response never grants session', async () => {
     global.fetch=async()=>({ok:false,status:401});
     await assert.rejects(api.exchangeCopiedEmailLink('https://khpprzhqovzhgxdltarq.supabase.co/auth/v1/verify?token='+ 'a'.repeat(64) +'&type=magiclink'));
   } finally {global.fetch=old;}
+});
+test('six digit email OTP is verified through Supabase Auth only',async()=>{
+ const old=global.fetch;let call;
+ try {global.fetch=async(u,o)=>{call={u,o};return {ok:true,json:async()=>({access_token:'verified-owner-jwt'})}};
+ const token=await api.verifyEmailCode('owner@example.com','123456');
+ assert.equal(token,'verified-owner-jwt');
+ assert.equal(call.u,'https://khpprzhqovzhgxdltarq.supabase.co/auth/v1/verify');
+ assert.deepEqual(JSON.parse(call.o.body),{email:'owner@example.com',token:'123456',type:'email'});
+ }finally{global.fetch=old}
+});
+test('malformed codes rejected without API request',async()=>{
+ const old=global.fetch;let calls=0;
+ try {global.fetch=async()=>{calls++;throw Error('unexpected request')};
+ for(const code of ['12345','1234567','12a456','']) await assert.rejects(api.verifyEmailCode('owner@example.com',code));
+ assert.equal(calls,0);
+ }finally{global.fetch=old}
 });
